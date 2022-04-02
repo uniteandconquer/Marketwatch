@@ -1,6 +1,13 @@
 # Marketwatch
 Market data for the Qortal blockchain
 
+-------------------
+Watch the install guide at https://rumble.com/vzfre6-marketwatch-install-guide.html
+
+Watch the quick tour video at https://rumble.com/vzfsiq-marketwatch-quick-tour.html
+
+-----------------
+
 Marketwatch is a highly customizable, yet easy to use utility that extracts every trade straight from your local Qortal node and plots that data into charts. It also calculates cross-chain and USD prices from that data since the day the trade portal went live and until the present time.
 
 Features include:
