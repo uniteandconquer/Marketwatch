@@ -208,7 +208,19 @@ public class TradeExtractor
                 String txRecipient = txObject.getString("recipient");
                 String atAddress = txObject.getString("atAddress");
 
-                String atString = Utilities.ReadStringFromURL("http://" + dbManager.socket + "/crosschain/trade/" + atAddress);
+                String atString;
+                
+                try
+                {
+                    atString = Utilities.ReadStringFromURL("http://" + dbManager.socket + "/crosschain/trade/" + atAddress);
+                }
+                catch (IOException | TimeoutException e)
+                {
+                    System.err.println("Could not get data from AT address " + atAddress + ", skipping trade.");
+                    BackgroundService.AppendLog("Could not get data from AT address " + atAddress + ", skipping trade.");
+                    continue;
+                }
+                
                 JSONObject atAddressObject = new JSONObject(atString);
 
                 String status = atAddressObject.getString("mode");
