@@ -593,11 +593,15 @@ public class Utilities
                 break;    
             case "QORT to Litecoin price":
             case "QORT to Bitcoin price":
-            case "QORT to Dogecoin price":   
+            case "QORT to Dogecoin price":  
+            case "QORT to Ravencoin price":   
+            case "QORT to Digibyte price":    
             case "QORT to US Dollar price":  
             case "LTC to QORT trades (in QORT)": 
             case "BTC to QORT trades (in QORT)":  
             case "DOGE to QORT trades (in QORT)":
+            case "RAVEN to QORT trades (in QORT)":
+            case "DIGIBYTE to QORT trades (in QORT)":
                 returnString = String.format("%,.5f QORT",value);
                 break;  
             case "Bitcoin to QORT price":        
@@ -610,20 +614,36 @@ public class Utilities
             case "DOGE to QORT trades (in DOGE)":
                 returnString = String.format("%,.5f DOGE",value);
                 break; 
+            case "Ravencoin to QORT price":
+            case "Ravencoin to US Dollar price":    
+            case "RAVEN to QORT trades (in RAVEN)":
+                returnString = String.format("%,.5f RAVEN",value);
+                break; 
+            case "Digibyte to QORT price":
+            case "Digibyte to US Dollar price":    
+            case "DIGIBYTE to QORT trades (in DIGIBYTE)":
+                returnString = String.format("%,.5f DGB",value);
+                break; 
             case "US Dollar to QORT price":  
             case "US Dollar to Litecoin price":
             case "US Dollar to Dogecoin price":
+            case "US Dollar to Ravencoin price":
+            case "US Dollar to Digibyte price":
             case "US Dollar to Bitcoin price":
                 returnString = String.format("%,.5f USD",value);
                 break; 
             case "BTC to QORT trades (Total)":
             case "LTC to QORT trades (Total)":
             case "DOGE to QORT trades (Total)":
+            case "RAVEN to QORT trades (Total)":
+            case "DIGIBYTE to QORT trades (Total)":
             case "All trades (Total)":
                 returnString = String.format("%,d trades", (int)value);
                 break;                
             case "Total QORT to LTC traded":
             case "Total QORT to DOGE traded":
+            case "Total QORT to RAVEN traded":
+            case "Total QORT to DIGIBYTE traded":
             case "Total QORT to BTC traded":
             case "Total QORT traded":      
                 returnString = String.format("%,.2f QORT<br/>", (double) value);
@@ -636,6 +656,12 @@ public class Utilities
                 break;
             case "Total DOGE to QORT traded":
                 returnString = String.format("%,.2f DOGE<br/>", (double) value);
+                break;
+            case "Total RAVEN to QORT traded":
+                returnString = String.format("%,.2f RAVEN<br/>", (double) value);
+                break;
+            case "Total DIGIBYTE to QORT traded":
+                returnString = String.format("%,.2f DGB<br/>", (double) value);
                 break;
             case "moving average":
                 returnString = String.format("%,.5f avg", value);

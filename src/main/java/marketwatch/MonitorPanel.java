@@ -262,7 +262,8 @@ public class MonitorPanel extends javax.swing.JPanel
             mintedSessionNode,mintingRateNode,levellingNode,blocksLeftNode,
             dataUsageNode,averageRateNode,minuteRateNode,hourRateNode,dayRateNode,
             pricesNode,qortToUsdNode,usdToQortNode,qortToLtcNode,ltcToQortNode,
-            qortToDogeNode,dogeToQortNode;    
+            qortToDogeNode,dogeToQortNode,qortToRavenNode,ravenToQortNode,
+            qortToDigibyteNode,digibyteToQortNode;    
     
     protected void CreateMonitorTree()
     {
@@ -337,12 +338,20 @@ public class MonitorPanel extends javax.swing.JPanel
         ltcToQortNode = new DefaultMutableTreeNode(new NodeInfo(Main.BUNDLE.getString("lite2qPriceDefault"),"dot.png"));
         qortToDogeNode = new DefaultMutableTreeNode(new NodeInfo(Main.BUNDLE.getString("q2dogePriceDefault"),"dot.png"));
         dogeToQortNode = new DefaultMutableTreeNode(new NodeInfo(Main.BUNDLE.getString("doge2qPriceDefault"),"dot.png"));
+        qortToRavenNode = new DefaultMutableTreeNode(new NodeInfo("QORT to Ravencoin price","dot.png"));
+        ravenToQortNode = new DefaultMutableTreeNode(new NodeInfo("Ravencoin to QORT price","dot.png"));
+        qortToDigibyteNode = new DefaultMutableTreeNode(new NodeInfo("QORT to Digibyte price","dot.png"));
+        digibyteToQortNode = new DefaultMutableTreeNode(new NodeInfo("Digibyte to QORT price","dot.png"));
         pricesNode.add(qortToUsdNode);
         pricesNode.add(usdToQortNode);
         pricesNode.add(qortToLtcNode);
         pricesNode.add(ltcToQortNode);
         pricesNode.add(qortToDogeNode);
         pricesNode.add(dogeToQortNode);
+        pricesNode.add(qortToRavenNode);
+        pricesNode.add(ravenToQortNode);
+        pricesNode.add(qortToDigibyteNode);
+        pricesNode.add(digibyteToQortNode);
         
         dataNode = new DefaultMutableTreeNode(new NodeInfo(Main.BUNDLE.getString("dataUsageNode"),"data.png"));
         root.add(dataNode);
@@ -909,7 +918,7 @@ public class MonitorPanel extends javax.swing.JPanel
         pingLabel = new javax.swing.JLabel();
         pricesButton = new javax.swing.JButton();
         setQortalFolder = new javax.swing.JButton();
-        setQortalFolder1 = new javax.swing.JButton();
+        resetMintingRateBtn = new javax.swing.JButton();
 
         monitorPanel.setLayout(new java.awt.GridBagLayout());
 
@@ -984,12 +993,12 @@ public class MonitorPanel extends javax.swing.JPanel
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         monitorPanel.add(setQortalFolder, gridBagConstraints);
 
-        setQortalFolder1.setText("Reset minting rate");
-        setQortalFolder1.addActionListener(new java.awt.event.ActionListener()
+        resetMintingRateBtn.setText("Reset minting rate");
+        resetMintingRateBtn.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
             {
-                setQortalFolder1ActionPerformed(evt);
+                resetMintingRateBtnActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -998,7 +1007,7 @@ public class MonitorPanel extends javax.swing.JPanel
         gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
         gridBagConstraints.weightx = 0.1;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
-        monitorPanel.add(setQortalFolder1, gridBagConstraints);
+        monitorPanel.add(resetMintingRateBtn, gridBagConstraints);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -1051,7 +1060,27 @@ public class MonitorPanel extends javax.swing.JPanel
         nodeInfo = (NodeInfo) dogeToQortNode.getUserObject();
         nodeInfo.nodeName = String.format(Main.BUNDLE.getString("fetchDoge2Q"));
         monitorTreeModel.valueForPathChanged(new TreePath(dogeToQortNode.getPath()),nodeInfo);
-        monitorTreeModel.reload(dogeToQortNode);      
+        monitorTreeModel.reload(dogeToQortNode);   
+        
+        nodeInfo = (NodeInfo) qortToRavenNode.getUserObject();
+        nodeInfo.nodeName = String.format("Fetching QORT to Ravencoin price. Please wait...");        
+        monitorTreeModel.valueForPathChanged(new TreePath(qortToRavenNode.getPath()),nodeInfo);
+        monitorTreeModel.reload(qortToRavenNode);
+        
+        nodeInfo = (NodeInfo) ravenToQortNode.getUserObject();
+        nodeInfo.nodeName = String.format("Fetching Ravencoin to QORT price. Please wait...");
+        monitorTreeModel.valueForPathChanged(new TreePath(ravenToQortNode.getPath()),nodeInfo);
+        monitorTreeModel.reload(ravenToQortNode);
+        
+        nodeInfo = (NodeInfo) qortToDigibyteNode.getUserObject();
+        nodeInfo.nodeName = String.format("Fetching QORT to Digibyte price. Please wait...");        
+        monitorTreeModel.valueForPathChanged(new TreePath(qortToDigibyteNode.getPath()),nodeInfo);
+        monitorTreeModel.reload(qortToDigibyteNode);
+        
+        nodeInfo = (NodeInfo) digibyteToQortNode.getUserObject();
+        nodeInfo.nodeName = String.format("Fetching Digibyte to QORT price. Please wait...");
+        monitorTreeModel.valueForPathChanged(new TreePath(digibyteToQortNode.getPath()),nodeInfo);
+        monitorTreeModel.reload(digibyteToQortNode);
         
         pricesButton.setEnabled(false);
         priceButtonReady = false;
@@ -1087,7 +1116,11 @@ public class MonitorPanel extends javax.swing.JPanel
                  jsonString = Utilities.ReadStringFromURL("http://" + gui.dbManager.socket + "/crosschain/price/LITECOIN?maxtrades=10");
                  double LTCprice = ((double)Long.parseLong(jsonString) / 100000000);
                  jsonString = Utilities.ReadStringFromURL("http://" + gui.dbManager.socket + "/crosschain/price/DOGECOIN?maxtrades=10");
-                 double DogePrice = ((double) Long.parseLong(jsonString) / 100000000);
+                 double dogePrice = ((double) Long.parseLong(jsonString) / 100000000);
+                 jsonString = Utilities.ReadStringFromURL("http://" + gui.dbManager.socket + "/crosschain/price/RAVENCOIN?maxtrades=10");
+                 double ravenPrice = ((double) Long.parseLong(jsonString) / 100000000);
+                 jsonString = Utilities.ReadStringFromURL("http://" + gui.dbManager.socket + "/crosschain/price/DIGIBYTE?maxtrades=10");
+                 double digibytePrice = ((double) Long.parseLong(jsonString) / 100000000);
                 
                 double qortUsdPrice = LTC_USDprice * (1 / LTCprice);
                  
@@ -1115,14 +1148,34 @@ public class MonitorPanel extends javax.swing.JPanel
                     monitorTreeModel.reload(ltcToQortNode);
                     
                     ni = (NodeInfo) qortToDogeNode.getUserObject();
-                    ni.nodeName =  String.format("1 QORT = %.5f Dogecoin", ((double) 1/DogePrice));
+                    ni.nodeName =  String.format("1 QORT = %.5f Dogecoin", ((double) 1/dogePrice));
                     monitorTreeModel.valueForPathChanged(new TreePath(qortToDogeNode.getPath()),ni);
                     monitorTreeModel.reload(qortToDogeNode);      
                     
                     ni = (NodeInfo) dogeToQortNode.getUserObject();
-                    ni.nodeName = String.format("1 Dogecoin = %.5f QORT", DogePrice);
+                    ni.nodeName = String.format("1 Dogecoin = %.5f QORT", dogePrice);
                     monitorTreeModel.valueForPathChanged(new TreePath(dogeToQortNode.getPath()),ni);
-                    monitorTreeModel.reload(dogeToQortNode);                 
+                    monitorTreeModel.reload(dogeToQortNode);        
+                    
+                    ni = (NodeInfo) qortToRavenNode.getUserObject();
+                    ni.nodeName =  String.format("1 QORT = %.5f Ravencoin", ((double) 1/ravenPrice));
+                    monitorTreeModel.valueForPathChanged(new TreePath(qortToRavenNode.getPath()),ni);
+                    monitorTreeModel.reload(qortToRavenNode);      
+                    
+                    ni = (NodeInfo) ravenToQortNode.getUserObject();
+                    ni.nodeName = String.format("1 Ravencoin = %.5f QORT", ravenPrice);
+                    monitorTreeModel.valueForPathChanged(new TreePath(ravenToQortNode.getPath()),ni);
+                    monitorTreeModel.reload(ravenToQortNode);    
+                    
+                    ni = (NodeInfo) qortToDigibyteNode.getUserObject();
+                    ni.nodeName =  String.format("1 QORT = %.5f Digibyte", ((double) 1/digibytePrice));
+                    monitorTreeModel.valueForPathChanged(new TreePath(qortToDigibyteNode.getPath()),ni);
+                    monitorTreeModel.reload(qortToDigibyteNode);      
+                    
+                    ni = (NodeInfo) digibyteToQortNode.getUserObject();
+                    ni.nodeName = String.format("1 Digibyte = %.5f QORT", digibytePrice);
+                    monitorTreeModel.valueForPathChanged(new TreePath(digibyteToQortNode.getPath()),ni);
+                    monitorTreeModel.reload(digibyteToQortNode);             
                  });
             }
             catch (IOException | NumberFormatException | TimeoutException e)
@@ -1198,8 +1251,8 @@ public class MonitorPanel extends javax.swing.JPanel
         }
     }//GEN-LAST:event_setQortalFolderActionPerformed
 
-    private void setQortalFolder1ActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_setQortalFolder1ActionPerformed
-    {//GEN-HEADEREND:event_setQortalFolder1ActionPerformed
+    private void resetMintingRateBtnActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_resetMintingRateBtnActionPerformed
+    {//GEN-HEADEREND:event_resetMintingRateBtnActionPerformed
        File settingsFile = new File(System.getProperty("user.dir") + "/bin/settings.json");
         if(settingsFile.exists())
         {
@@ -1227,7 +1280,7 @@ public class MonitorPanel extends javax.swing.JPanel
                     BackgroundService.AppendLog(e);
                 }
         }
-    }//GEN-LAST:event_setQortalFolder1ActionPerformed
+    }//GEN-LAST:event_resetMintingRateBtnActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1237,7 +1290,7 @@ public class MonitorPanel extends javax.swing.JPanel
     private javax.swing.JLabel pingLabel;
     private javax.swing.JButton pricesButton;
     private javax.swing.JButton refreshButton;
+    private javax.swing.JButton resetMintingRateBtn;
     private javax.swing.JButton setQortalFolder;
-    private javax.swing.JButton setQortalFolder1;
     // End of variables declaration//GEN-END:variables
 }

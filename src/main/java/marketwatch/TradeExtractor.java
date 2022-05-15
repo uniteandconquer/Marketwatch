@@ -66,10 +66,15 @@ public class TradeExtractor
                 //terminating the execution
                 marketPanel.stopButton.setEnabled(false);
                 
-                int[] dogeResults,btcResults,ltcResults;
+                int[] dogeResults,ravenResults,digibyteResults,btcResults,ltcResults;
                 
                 marketPanel.lookupStatusLabel.setText("Updating Dogecoin trades. Please wait...");
-                dogeResults = extractTrades("DOGECOIN",marketPanel,connection);
+                dogeResults = extractTrades("DOGECOIN",marketPanel,connection);                
+                marketPanel.lookupStatusLabel.setText("Updating Ravencoin trades. Please wait...");
+                ravenResults = extractTrades("RAVENCOIN",marketPanel,connection);                
+                marketPanel.lookupStatusLabel.setText("Updating Digibyte trades. Please wait...");
+                digibyteResults = extractTrades("DIGIBYTE",marketPanel,connection);
+                
                 marketPanel.lookupStatusLabel.setText("Updating Bitcoin trades. Please wait...");
                 btcResults = extractTrades("BITCOIN",marketPanel,connection);
                 
@@ -80,9 +85,15 @@ public class TradeExtractor
                 String statusString = Utilities.AllignCenterHTML(
                         String.format("Update finished<br/><br/>"
                                 + "New Dogecoin trades : %d | Total Dogecoin trades : %d<br/>"
+                                + "New Ravencoin trades : %d | Total Ravencoin trades : %d<br/>"
+                                + "New Digibyte trades : %d | Total Digibyte trades : %d<br/>"
                                 + "New Bitcoin trades : %d | Total Bitcoin trades : %d<br/>"
                                 + "New Litecoin trades : %d | Total Litecoin trades : %d", 
-                                dogeResults[0],dogeResults[1],btcResults[0],btcResults[1],ltcResults[0],ltcResults[1]));
+                                dogeResults[0],dogeResults[1],
+                                ravenResults[0],ravenResults[1],
+                                digibyteResults[0],digibyteResults[1],
+                                btcResults[0],btcResults[1],
+                                ltcResults[0],ltcResults[1]));
                 
                 //If usd lookup failed, append the status string with the usd failed message
                 if(!marketPanel.lookupStatusLabel.getText().equals(ltcStatus))
@@ -216,16 +227,16 @@ public class TradeExtractor
                 }
                 catch (IOException | TimeoutException e)
                 {
-                    System.err.println("Could not get data from AT address " + atAddress + ", skipping trade.");
-                    BackgroundService.AppendLog("Could not get data from AT address " + atAddress + ", skipping trade.");
+                    System.err.println("Could not get data from AT address " + atAddress + " , skipping trade.");
+                    BackgroundService.AppendLog("Could not get data from AT address " + atAddress + " , skipping trade.");
                     continue;
                 }
                 
                 JSONObject atAddressObject = new JSONObject(atString);
 
                 String status = atAddressObject.getString("mode");
-                String foreignChain = atAddressObject.getString("foreignBlockchain");
-
+                String foreignChain = atAddressObject.getString("foreignBlockchain");    
+                
                 if (status.equals("REDEEMED"))
                 {
 
@@ -324,7 +335,7 @@ public class TradeExtractor
         String usdForeignTable = "usd_ltc";
         String usdPerForeign = "usd_per_ltc";
         String foreignPerUsd = "ltc_per_usd";
-        String usdPair = "USDC_LTC";
+        String coinGeckoName = "litecoin";
         String foreignQortTable = "ltc_qort";
         int averageBy = 35;
 
@@ -339,7 +350,7 @@ public class TradeExtractor
                 usdForeignTable = "usd_btc";
                 usdPerForeign = "usd_per_btc";
                 foreignPerUsd = "btc_per_usd";
-                usdPair = "USDC_BTC";
+                coinGeckoName = "bitcoin";
                 foreignQortTable = "btc_qort";
                 averageBy = 10;
                 break;
@@ -352,8 +363,34 @@ public class TradeExtractor
                 usdForeignTable = "usd_doge";
                 usdPerForeign = "usd_per_doge";
                 foreignPerUsd = "doge_per_usd";
-                usdPair = "USDC_DOGE";
+                coinGeckoName = "dogecoin";
                 foreignQortTable = "doge_qort";
+                averageBy = 10;
+                break;
+            case "RAVENCOIN":
+                tradesJTable = marketPanel.ravenTradesTable; 
+                tradesDbTable = "raven_trades";
+                totalForeign = "total_raven";
+                qortPerForeign = "qort_per_raven";
+                foreignPerQort = "raven_per_qort";
+                usdForeignTable = "usd_raven";
+                usdPerForeign = "usd_per_raven";
+                foreignPerUsd = "raven_per_usd";
+                coinGeckoName = "ravencoin";
+                foreignQortTable = "raven_qort";
+                averageBy = 10;
+                break;
+            case "DIGIBYTE":
+                tradesJTable = marketPanel.digibyteTradesTable; 
+                tradesDbTable = "digibyte_trades";
+                totalForeign = "total_digibyte";
+                qortPerForeign = "qort_per_digibyte";
+                foreignPerQort = "digibyte_per_qort";
+                usdForeignTable = "usd_digibyte";
+                usdPerForeign = "usd_per_digibyte";
+                foreignPerUsd = "digibyte_per_usd";
+                coinGeckoName = "digibyte";
+                foreignQortTable = "digibyte_qort";
                 averageBy = 10;
                 break;
         }
@@ -386,7 +423,7 @@ public class TradeExtractor
         int tradesCount = 0;
 
         while(resultSet.next())
-        {
+        {       
             jsonString = resultSet.getString("at_json");
             atAddressObject = new JSONObject(jsonString);
 
@@ -429,42 +466,51 @@ public class TradeExtractor
         long endTimestamp =  System.currentTimeMillis();  //( long) dbManager.GetFirstItem(tradesDbTable, "timestamp", "timestamp", "desc", connection); 
         startTimestamp /= 1000;//timestamp to seconds
         endTimestamp /= 1000;//timestamp to seconds
-
-        jsonString = Utilities.ReadStringFromURL(
-                "https://poloniex.com/public?command=returnChartData&currencyPair=" + usdPair + "&start="
-                + startTimestamp+ "&end=" + endTimestamp + "&resolution=auto");
-                     
         
         boolean usdLookupSuccess = true;
-        if(jsonString == null)
-        {
-            usdLookupSuccess = false;
-            marketPanel.lookupStatusLabel.setText(Utilities.AllignCenterHTML(
-                    "Failed to look up US Dollar prices from poloniex.com<br/>"
-                + "Either the poloniex service or your internet connection is down<br/>"
-                + "US dollar prices may not be up to date"));
-        }
-        else
-        {
-            JSONArray pricesArray = new JSONArray(jsonString);
-            JSONObject jSONObject;
+        long lookupRange = 7690000; //approx 90 days in seconds
+        
+        //for hourly granularity in coingecko results we want to restrict the range to less than 90 days
+        for(long current = startTimestamp; current <= endTimestamp; current += lookupRange)
+        {            
+            jsonString = Utilities.ReadStringFromURL(
+                    "https://api.coingecko.com/api/v3/coins/" + coinGeckoName + "/market_chart/range?vs_currency=USD&"
+                            + "from=" + current + "&to=" + (current + lookupRange));
 
-            for(int i = 0; i < pricesArray.length(); i++)
+            if(jsonString == null)
             {
-                jSONObject = pricesArray.getJSONObject(i);
+                usdLookupSuccess = false;
+                marketPanel.lookupStatusLabel.setText(Utilities.AllignCenterHTML(
+                        "Failed to look up US Dollar prices from coingecko<br/>"
+                    + "Either the coingecko service or your internet connection is down<br/>"
+                    + "US dollar prices may not be up to date"));
+                break;
+            }
+            else
+            {    
+                JSONObject jsonResponse = new JSONObject(jsonString);
 
-                double weightedAverage = jSONObject.getDouble("weightedAverage");
+                JSONArray pricesArray = jsonResponse.getJSONArray("prices");
 
-                if(weightedAverage == 0)//poloniex returns invalid data (date = 0)
-                    continue;
-
-                dbManager.InsertIntoDB(new String[]{usdForeignTable,
-                    "timestamp", String.valueOf(jSONObject.getLong("date") * 1000),//UNIX time is in seconds
-                    usdPerForeign, String.valueOf(weightedAverage),
-                    foreignPerUsd,String.valueOf(Utilities.divide(1 , weightedAverage) )}, connection);       
+                long timestamp;
+                double price;
+                
+                for (int i = 0; i < pricesArray.length(); i++)
+                {
+                    JSONArray result = pricesArray.getJSONArray(i); //get each double[] from the jsonArray
+                    
+                    timestamp = result.getLong(0);
+                    price = result.getDouble(1);
+                    
+                    dbManager.InsertIntoDB(new String[]{usdForeignTable,
+                        //coingecko returns standard timestamp (not UNIX) but take a UNIX timestamp for the http query
+                        "timestamp", String.valueOf(timestamp), 
+                        usdPerForeign, String.valueOf(price),
+                        foreignPerUsd,String.valueOf(Utilities.divide(1 , price) )}, connection);       
+                }                
             } 
-        }  
-        // </editor-fold>
+        }             
+        // </editor-fold>        
 
         // <editor-fold defaultstate="collapsed" desc="Create weighted average FOREIGN/QORT prices table ">
        //using a weighted average (100) to account for spikes caused by low volume high/low priced trades                 

@@ -311,6 +311,18 @@ public class ChartWindow extends javax.swing.JInternalFrame
             case QORT_DOGE_TRADE:
                 type = Chart.DOGE_QORT_TRADE;
                 break;
+            case RAVEN_QORT_TRADE:
+                type = Chart.QORT_RAVEN_TRADE;
+                break;
+            case QORT_RAVEN_TRADE:
+                type = Chart.RAVEN_QORT_TRADE;
+                break;
+            case DIGIBYTE_QORT_TRADE:
+                type = Chart.QORT_DIGIBYTE_TRADE;
+                break;
+            case QORT_DIGIBYTE_TRADE:
+                type = Chart.DIGIBYTE_QORT_TRADE;
+                break;
             case BTC_QORT_TRADE:
                 type = Chart.QORT_BTC_TRADE;
                 break;

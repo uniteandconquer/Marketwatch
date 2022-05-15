@@ -300,7 +300,19 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                             break;  
                         case "QORT to Dogecoin price":  
                             dialogString += String.format("%,.5f QORT for 1 Dogecoin<br/>",(double)y);
+                            break;                              
+                        case "Ravencoin to QORT price":
+                            dialogString += String.format("%,.5f Ravencoin for 1 QORT<br/>",(double)y);
                             break;  
+                        case "QORT to Ravencoin price":  
+                            dialogString += String.format("%,.5f QORT for 1 Ravencoin<br/>",(double)y);
+                            break;                               
+                        case "Digibyte to QORT price":
+                            dialogString += String.format("%,.5f Digibyte for 1 QORT<br/>",(double)y);
+                            break;  
+                        case "QORT to Digibyte price":  
+                            dialogString += String.format("%,.5f QORT for 1 Digibyte<br/>",(double)y);
+                            break;                             
                         case "US Dollar to QORT price":  
                             dialogString += String.format("%,.5f US Dollar for 1 QORT<br/>",(double)y);
                             break;  
@@ -318,6 +330,18 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                             break; 
                         case "Dogecoin to US Dollar price":    
                             dialogString += String.format("%,.5f Dogecoin for 1 US Dollar<br/>",(double)y);
+                            break;  
+                        case "US Dollar to Ravencoin price":
+                            dialogString += String.format("%,.5f US Dollar for 1 Ravencoin<br/>",(double)y);
+                            break; 
+                        case "Ravencoin to US Dollar price":    
+                            dialogString += String.format("%,.5f Ravencoin for 1 US Dollar<br/>",(double)y);
+                            break;  
+                        case "US Dollar to Digibyte price":
+                            dialogString += String.format("%,.5f US Dollar for 1 Dogecoin<br/>",(double)y);
+                            break; 
+                        case "Digibyte to US Dollar price":    
+                            dialogString += String.format("%,.5f Digibyte for 1 US Dollar<br/>",(double)y);
                             break;  
                         case "US Dollar to Bitcoin price":
                             dialogString += String.format("%,.5f US Dollar for 1 Bitcoin<br/>",(double)y);
@@ -343,14 +367,30 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                         case "DOGE to QORT trades (in DOGE)":
                             dialogString += String.format("%,.5f Dogecoin per QORT paid<br/>", (double) y);
                             break;
+                        case "RAVEN to QORT trades (in QORT)":
+                            dialogString += String.format("%,.5f QORT per Dogecoin paid<br/>",(double)y);
+                            break; 
+                        case "RAVEN to QORT trades (in RAVEN)":
+                            dialogString += String.format("%,.5f Dogecoin per QORT paid<br/>", (double) y);
+                            break;
+                        case "DIGIBYTE to QORT trades (in QORT)":
+                            dialogString += String.format("%,.5f QORT per Dogecoin paid<br/>",(double)y);
+                            break; 
+                        case "DIGIBYTE to QORT trades (in DIGIBYTE)":
+                            dialogString += String.format("%,.5f Dogecoin per QORT paid<br/>", (double) y);
+                            break;
                         case "BTC to QORT trades (Total)":
                         case "LTC to QORT trades (Total)":
                         case "DOGE to QORT trades (Total)":
+                        case "RAVEN to QORT trades (Total)":
+                        case "DIGIBYTE to QORT trades (Total)":
                         case "All trades (Total)":
                             dialogString += String.format("%,d trades<br/>",  (int) y);
                             break;
                         case "Total QORT to LTC traded":
                         case "Total QORT to DOGE traded":
+                        case "Total QORT to RAVEN traded":
+                        case "Total QORT to DIGIBYTE traded":
                         case "Total QORT to BTC traded":
                         case "Total QORT traded":      
                             dialogString += String.format("%,.2f QORT traded<br/>", (double) y);
@@ -363,6 +403,12 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                             break;
                         case "Total DOGE to QORT traded":
                             dialogString += String.format("%,.2f DOGE traded<br/>", (double) y);
+                            break;
+                        case "Total DOGE to RAVEN traded":
+                            dialogString += String.format("%,.2f RAVEN traded<br/>", (double) y);
+                            break;
+                        case "Total DIGIBYTE to QORT traded":
+                            dialogString += String.format("%,.2f DGB traded<br/>", (double) y);
                             break;
                     }
                 }                   

@@ -122,7 +122,7 @@ public class MarketPanel extends javax.swing.JPanel
             //update status tab and go to that tab
             tabbedPane.setSelectedComponent(updateTab);
             for(int i = 0; i < tabbedPane.getTabCount(); i++)
-                tabbedPane.setEnabledAt(i, i == 4);
+                tabbedPane.setEnabledAt(i, i == tabbedPane.getTabCount() - 1);
         }
         else
         {
@@ -137,6 +137,8 @@ public class MarketPanel extends javax.swing.JPanel
            {    
                fillTradesTable(connection, ltcTradesTable, "timestamp desc", getTradesTableStrings(ltcTradesTable));
                fillTradesTable(connection, dogeTradesTable, "timestamp desc", getTradesTableStrings(dogeTradesTable));
+               fillTradesTable(connection, ravenTradesTable, "timestamp desc", getTradesTableStrings(ravenTradesTable));
+               fillTradesTable(connection, digibyteTradesTable, "timestamp desc", getTradesTableStrings(digibyteTradesTable));
                fillTradesTable(connection, btcTradesTable, "timestamp desc", getTradesTableStrings(btcTradesTable));
            }
            catch (Exception e)
@@ -321,7 +323,10 @@ public class MarketPanel extends javax.swing.JPanel
                 String tabTitle = tabbedPane.getTitleAt(i);
 
                 if(tabTitle.endsWith("trades"))
-                {                 
+                {   
+                    if(tabTitle.equals("Get latest trades"))
+                        continue;
+                    
                     JSplitPane splitPane = (JSplitPane) tabbedPane.getComponent(i); 
                     var cw = (ChartWindow)splitPane.getTopComponent();
                     cw.updateChart(connection);
@@ -337,6 +342,12 @@ public class MarketPanel extends javax.swing.JPanel
                             break;
                         case "Doge trades":
                             setChartPanelListener(cw, dogeTradesTable, dogeTradesScrollpane);
+                            break;
+                        case "Ravencoin trades":
+                            setChartPanelListener(cw, ravenTradesTable, ravenTradesScrollpane);
+                            break;
+                        case "Digibyte trades":
+                            setChartPanelListener(cw, digibyteTradesTable, digibyteTradesScrollpane);
                             break;
                     }
                 }
@@ -770,6 +781,8 @@ public class MarketPanel extends javax.swing.JPanel
             ImageIcon btcIcon = new ImageIcon(getClass().getResource("/Images/bitcoin.png"));
             ImageIcon ltcIcon = new ImageIcon(getClass().getResource("/Images/litecoin.png"));
             ImageIcon dogeIcon = new ImageIcon(getClass().getResource("/Images/dogecoin.png"));
+            ImageIcon ravenIcon = new ImageIcon(getClass().getResource("/Images/ravencoin.png"));
+            ImageIcon digibyteIcon = new ImageIcon(getClass().getResource("/Images/digibyte.png"));
             ImageIcon dollarIcon = new ImageIcon(getClass().getResource("/Images/dollar.png"));
             ImageIcon multiIcon = new ImageIcon(getClass().getResource("/Images/all_foreign.png"));
             
@@ -812,6 +825,14 @@ public class MarketPanel extends javax.swing.JPanel
                         addChartItemToList(Chart.DOGE_QORT.toString(), dogeIcon, qortIcon, chartItems,false);
                         addChartItemToList(Chart.QORT_DOGE.toString(), qortIcon, dogeIcon, chartItems,false);                          
                         break;
+                    case "RAVEN_QORT":
+                        addChartItemToList(Chart.RAVEN_QORT.toString(), ravenIcon, qortIcon, chartItems,false);
+                        addChartItemToList(Chart.QORT_RAVEN.toString(), qortIcon, ravenIcon, chartItems,false);                          
+                        break;
+                    case "DIGIBYTE_QORT":
+                        addChartItemToList(Chart.DIGIBYTE_QORT.toString(), digibyteIcon, qortIcon, chartItems,false);
+                        addChartItemToList(Chart.QORT_DIGIBYTE.toString(), qortIcon, digibyteIcon, chartItems,false);                          
+                        break;
                     case "BTC_QORT":
                         addChartItemToList(Chart.BTC_QORT.toString(), btcIcon, qortIcon, chartItems,false);
                         addChartItemToList(Chart.QORT_BTC.toString(), qortIcon, btcIcon, chartItems,false);                          
@@ -828,6 +849,14 @@ public class MarketPanel extends javax.swing.JPanel
                         addChartItemToList(Chart.USD_DOGE.toString(), dollarIcon, dogeIcon, chartItems,false);
                         addChartItemToList(Chart.DOGE_USD.toString(), dogeIcon, dollarIcon, chartItems,false);                          
                         break;
+                    case "USD_RAVEN":
+                        addChartItemToList(Chart.USD_RAVEN.toString(), dollarIcon, ravenIcon, chartItems,false);
+                        addChartItemToList(Chart.RAVEN_USD.toString(), ravenIcon, dollarIcon, chartItems,false);                          
+                        break;
+                    case "USD_DIGIBYTE":
+                        addChartItemToList(Chart.USD_DIGIBYTE.toString(), dollarIcon, digibyteIcon, chartItems,false);
+                        addChartItemToList(Chart.DIGIBYTE_USD.toString(), digibyteIcon, dollarIcon, chartItems,false);                          
+                        break;
                     case "LTC_TRADES":
                         addChartItemToList(Chart.LTC_QORT_TRADE.toString(), ltcIcon, qortIcon, chartItems,true);
                         addChartItemToList(Chart.QORT_LTC_TRADE.toString(), qortIcon, ltcIcon, chartItems,true);   
@@ -841,6 +870,20 @@ public class MarketPanel extends javax.swing.JPanel
                         addChartItemToList(Chart.DOGE_QORT_AMOUNT.toString(), dogeIcon, qortIcon, chartItems,true);     
                         addChartItemToList(Chart.QORT_DOGE_AMOUNT.toString(), qortIcon, dogeIcon, chartItems,true);     
                         addChartItemToList(Chart.DOGE_TRADES_TOTAL.toString(), dogeIcon, qortIcon, chartItems,true);                         
+                        break;
+                    case "RAVEN_TRADES":
+                        addChartItemToList(Chart.RAVEN_QORT_TRADE.toString(), ravenIcon, qortIcon, chartItems,true);
+                        addChartItemToList(Chart.QORT_RAVEN_TRADE.toString(), qortIcon, ravenIcon, chartItems,true);   
+                        addChartItemToList(Chart.RAVEN_QORT_AMOUNT.toString(), ravenIcon, qortIcon, chartItems,true);     
+                        addChartItemToList(Chart.QORT_RAVEN_AMOUNT.toString(), qortIcon, ravenIcon, chartItems,true);     
+                        addChartItemToList(Chart.RAVEN_TRADES_TOTAL.toString(), ravenIcon, qortIcon, chartItems,true);                         
+                        break;
+                    case "DIGIBYTE_TRADES":
+                        addChartItemToList(Chart.DIGIBYTE_QORT_TRADE.toString(), digibyteIcon, qortIcon, chartItems,true);
+                        addChartItemToList(Chart.QORT_DIGIBYTE_TRADE.toString(), qortIcon, digibyteIcon, chartItems,true);   
+                        addChartItemToList(Chart.DIGIBYTE_QORT_AMOUNT.toString(), digibyteIcon, qortIcon, chartItems,true);     
+                        addChartItemToList(Chart.QORT_DIGIBYTE_AMOUNT.toString(), qortIcon, digibyteIcon, chartItems,true);     
+                        addChartItemToList(Chart.DIGIBYTE_TRADES_TOTAL.toString(), digibyteIcon, qortIcon, chartItems,true);                         
                         break;
                     case "BTC_TRADES":
                         addChartItemToList(Chart.BTC_QORT_TRADE.toString(), btcIcon, qortIcon, chartItems,true);
@@ -877,8 +920,10 @@ public class MarketPanel extends javax.swing.JPanel
                 chartsList.repaint();                
             });
             
-            initTradesTab(Chart.LTC_QORT_TRADE, connection, ltcTradesTab, ltcTradesTable, ltcTradesScrollpane);
+            initTradesTab(Chart.LTC_QORT_TRADE, connection, tradesTab, ltcTradesTable, ltcTradesScrollpane);
             initTradesTab(Chart.DOGE_QORT_TRADE, connection, dogeTradesTab, dogeTradesTable, dogeTradesScrollpane);
+            initTradesTab(Chart.RAVEN_QORT_TRADE, connection, ravenTradesTab, ravenTradesTable, ravenTradesScrollpane);
+            initTradesTab(Chart.DIGIBYTE_QORT_TRADE, connection, digibyteTradesTab, digibyteTradesTable, digibyteTradesScrollpane);
             initTradesTab(Chart.BTC_QORT_TRADE, connection, btcTradesTab, btcTradesTable, btcTradesScrollpane);      
             
             if(desktopPane.getAllFrames().length > 0) //desktopPane.getSelectedFrame() != null)
@@ -1115,6 +1160,22 @@ public class MarketPanel extends javax.swing.JPanel
             result[3] = "qort_per_doge";
             return result;
         }
+        else if(tradesTable == ravenTradesTable)
+        {
+            result[0] = "raven_trades";
+            result[1] = "total_raven";
+            result[2] = "raven_per_qort";
+            result[3] = "qort_per_raven";
+            return result;
+        }
+        else if(tradesTable == digibyteTradesTable)
+        {
+            result[0] = "digibyte_trades";
+            result[1] = "total_digibyte";
+            result[2] = "digibyte_per_qort";
+            result[3] = "qort_per_digibyte";
+            return result;
+        }
         else
         {
             result[0] = "btc_trades";
@@ -1186,47 +1247,33 @@ public class MarketPanel extends javax.swing.JPanel
     {       
         ChartStyle style = copyChartStyle(table, layoutName, folder, extension);
         
-        ChartWindow ltcTradesWindow = (ChartWindow) ltcTradesTab.getTopComponent();
-        if(style != null)
-            setChartStyle(ltcTradesWindow,style);
-        ltcTradesWindow.chartMaker.toggleSnapshots(true);
-        ltcTradesWindow.chartMaker.toggleText(false, ltcTradesWindow.getTitle(), ltcTradesWindow.textColor);  
-        ltcTradesWindow.chartMaker.setRange(0,true);
-        ltcTradesWindow.chartMaker.toggleVolume(true);
-
-        ChartWindow dogeTradesWindow = (ChartWindow) dogeTradesTab.getTopComponent();
-        if(style != null)
-            setChartStyle(dogeTradesWindow,style);
-        dogeTradesWindow.chartMaker.toggleSnapshots(true);
-        dogeTradesWindow.chartMaker.toggleText(false, dogeTradesWindow.getTitle(), dogeTradesWindow.textColor);
-        dogeTradesWindow.chartMaker.setRange(0,true);
-        dogeTradesWindow.chartMaker.toggleVolume(true);
-
-        ChartWindow btcTradesWindow = (ChartWindow) btcTradesTab.getTopComponent();
-        if(style != null)
-            setChartStyle(btcTradesWindow,style);
-        btcTradesWindow.chartMaker.toggleSnapshots(true);
-        btcTradesWindow.chartMaker.toggleText(false, btcTradesWindow.getTitle(), btcTradesWindow.textColor);
-        btcTradesWindow.chartMaker.setRange(0,true);
-        btcTradesWindow.chartMaker.toggleVolume(true);
+        JSplitPane[] tradesTabs = {tradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
+        
+        for(JSplitPane tab : tradesTabs)
+        {
+            ChartWindow tradesWindow = (ChartWindow) tab.getTopComponent();
+            if(style != null)
+                setChartStyle(tradesWindow,style);
+            tradesWindow.chartMaker.toggleSnapshots(true);
+            tradesWindow.chartMaker.toggleText(false, tradesWindow.getTitle(), tradesWindow.textColor);  
+            tradesWindow.chartMaker.setRange(0,true);
+            tradesWindow.chartMaker.toggleVolume(true);            
+        }
             
         enableTradeTabItems();//must be done after setStyle, items get disabled there
     }
     
     private void enableTradeTabItems()
     {
-        ChartWindow ltcTradesWindow = (ChartWindow) ltcTradesTab.getTopComponent();
-        ltcTradesWindow.flipPairButton.setVisible(true);
-        ltcTradesWindow.peaksCheckbox.setVisible(true);
-        ltcTradesWindow.showVolumeBox.setVisible(true);
-        ChartWindow dogeTradesWindow = (ChartWindow) dogeTradesTab.getTopComponent();
-        dogeTradesWindow.flipPairButton.setVisible(true);
-        dogeTradesWindow.peaksCheckbox.setVisible(true);
-        dogeTradesWindow.showVolumeBox.setVisible(true);
-        ChartWindow btcTradesWindow = (ChartWindow) btcTradesTab.getTopComponent();
-        btcTradesWindow.flipPairButton.setVisible(true);
-        btcTradesWindow.peaksCheckbox.setVisible(true);
-        btcTradesWindow.showVolumeBox.setVisible(true);
+        JSplitPane[] tradesTabs = {tradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
+        
+        for(JSplitPane tab : tradesTabs)
+        {
+            ChartWindow tradesWindow = (ChartWindow) tradesTab.getTopComponent();
+            tradesWindow.flipPairButton.setVisible(true);
+            tradesWindow.peaksCheckbox.setVisible(true);
+            tradesWindow.showVolumeBox.setVisible(true);            
+        }
     }
     
     protected void hideAllChartDialogs()
@@ -1243,7 +1290,7 @@ public class MarketPanel extends javax.swing.JPanel
         
         ((ChartWindow) dogeTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
         ((ChartWindow) btcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
-        ((ChartWindow)ltcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
+        ((ChartWindow)tradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
     }
     
     private void setChartItemVisible(String title, boolean isVisible)
@@ -1265,6 +1312,7 @@ public class MarketPanel extends javax.swing.JPanel
         ChartItem item = new ChartItem();
         String title = typeToTitleMap.get(type);
         item.initialise(gui,title,icon1,icon2,isTrade);
+        
         int indexInList = Integer.parseInt(titleToIndexMap.get(title));                        
         itemsList[indexInList] = item;
     }
@@ -1572,6 +1620,12 @@ public class MarketPanel extends javax.swing.JPanel
             case DOGE_QORT:
             case QORT_DOGE:
                 return "DOGE_QORT";
+            case RAVEN_QORT:
+            case QORT_RAVEN:
+                return "RAVEN_QORT";
+            case DIGIBYTE_QORT:
+            case QORT_DIGIBYTE:
+                return "DIGIBYTE_QORT";
             case USD_QORT:
             case QORT_USD:
                 return "USD_QORT";
@@ -1581,6 +1635,12 @@ public class MarketPanel extends javax.swing.JPanel
             case USD_DOGE:
             case DOGE_USD:
                 return "USD_DOGE";
+            case USD_RAVEN:
+            case RAVEN_USD:
+                return "USD_RAVEN";
+            case USD_DIGIBYTE:
+            case DIGIBYTE_USD:
+                return "USD_DIGIBYTE";
             case USD_BTC:
             case BTC_USD:
                 return "USD_BTC";
@@ -1602,6 +1662,18 @@ public class MarketPanel extends javax.swing.JPanel
             case DOGE_QORT_AMOUNT:
             case DOGE_TRADES_TOTAL:
                 return "DOGE_TRADES";
+            case QORT_RAVEN_TRADE:
+            case RAVEN_QORT_TRADE:
+            case QORT_RAVEN_AMOUNT:
+            case RAVEN_QORT_AMOUNT:
+            case RAVEN_TRADES_TOTAL:
+                return "RAVEN_TRADES";
+            case QORT_DIGIBYTE_TRADE:
+            case DIGIBYTE_QORT_TRADE:
+            case QORT_DIGIBYTE_AMOUNT:
+            case DIGIBYTE_QORT_AMOUNT:
+            case DIGIBYTE_TRADES_TOTAL:
+                return "DIGIBYTE_TRADES";
             case TOTAL_TRADES:
             case TOTAL_QORT_TRADED:
                 return "ALL_TRADES";
@@ -1619,14 +1691,22 @@ public class MarketPanel extends javax.swing.JPanel
         list1.add("BTC_QORT"); list2.add("Bitcoin to QORT price");
         list1.add("QORT_BTC"); list2.add("QORT to Bitcoin price");
         list1.add("DOGE_QORT"); list2.add("Dogecoin to QORT price");
-        list1.add("QORT_DOGE"); list2.add("QORT to Dogecoin price");
+        list1.add("QORT_DOGE"); list2.add("QORT to Dogecoin price");        
+        list1.add("RAVEN_QORT"); list2.add("Ravencoin to QORT price");
+        list1.add("QORT_RAVEN"); list2.add("QORT to Ravencoin price");        
+        list1.add("DIGIBYTE_QORT"); list2.add("Digibyte to QORT price");
+        list1.add("QORT_DIGIBYTE"); list2.add("QORT to Digibyte price");
         
         list1.add("USD_QORT"); list2.add("US Dollar to QORT price");
         list1.add("QORT_USD"); list2.add("QORT to US Dollar price");        
         list1.add("USD_LTC"); list2.add("US Dollar to Litecoin price");
         list1.add("LTC_USD"); list2.add("Litecoin to US Dollar price");
         list1.add("USD_DOGE"); list2.add("US Dollar to Dogecoin price");
-        list1.add("DOGE_USD"); list2.add("Dogecoin to US Dollar price");
+        list1.add("DOGE_USD"); list2.add("Dogecoin to US Dollar price");        
+        list1.add("USD_RAVEN"); list2.add("US Dollar to Ravencoin price");
+        list1.add("RAVEN_USD"); list2.add("Ravencoin to US Dollar price");        
+        list1.add("USD_DIGIBYTE"); list2.add("US Dollar to Digibyte price");
+        list1.add("DIGIBYTE_USD"); list2.add("Digibyte to US Dollar price");        
         list1.add("USD_BTC"); list2.add("US Dollar to Bitcoin price");
         list1.add("BTC_USD"); list2.add("Bitcoin to US Dollar price");
         
@@ -1648,6 +1728,18 @@ public class MarketPanel extends javax.swing.JPanel
         list1.add("DOGE_QORT_AMOUNT"); list2.add("Total DOGE to QORT traded");
         list1.add("DOGE_TRADES_TOTAL"); list2.add("DOGE to QORT trades (Total)");
         
+        list1.add("QORT_RAVEN_TRADE"); list2.add("RAVEN to QORT trades (in QORT)");
+        list1.add("RAVEN_QORT_TRADE"); list2.add("RAVEN to QORT trades (in RAVEN)");
+        list1.add("QORT_RAVEN_AMOUNT"); list2.add("Total QORT to RAVEN traded");
+        list1.add("RAVEN_QORT_AMOUNT"); list2.add("Total RAVEN to QORT traded");
+        list1.add("RAVEN_TRADES_TOTAL"); list2.add("RAVEN to QORT trades (Total)");
+        
+        list1.add("QORT_DIGIBYTE_TRADE"); list2.add("DIGIBYTE to QORT trades (in QORT)");
+        list1.add("DIGIBYTE_QORT_TRADE"); list2.add("DIGIBYTE to QORT trades (in DIGIBYTE)");
+        list1.add("QORT_DIGIBYTE_AMOUNT"); list2.add("Total QORT to DIGIBYTE traded");
+        list1.add("DIGIBYTE_QORT_AMOUNT"); list2.add("Total DIGIBYTE to QORT traded");
+        list1.add("DIGIBYTE_TRADES_TOTAL"); list2.add("DIGIBYTE to QORT trades (Total)");
+        
         list1.add("TOTAL_TRADES"); list2.add("All trades (Total)");
         list1.add("TOTAL_QORT_TRADED"); list2.add("Total QORT traded");
         typeToTitleMap = new BidirectionalMap(list1, list2);
@@ -1664,36 +1756,56 @@ public class MarketPanel extends javax.swing.JPanel
         indexList.add("2"); titlesList.add("QORT to US Dollar price");
         indexList.add("3"); titlesList.add("US Dollar to QORT price");        
         indexList.add("4"); titlesList.add("QORT to Dogecoin price");
-        indexList.add("5"); titlesList.add("Dogecoin to QORT price");        
-        indexList.add("6"); titlesList.add("QORT to Bitcoin price");
-        indexList.add("7"); titlesList.add("Bitcoin to QORT price");        
-        indexList.add("8"); titlesList.add("Litecoin to US Dollar price");
-        indexList.add("9"); titlesList.add("US Dollar to Litecoin price");        
-        indexList.add("10"); titlesList.add("Dogecoin to US Dollar price");
-        indexList.add("11"); titlesList.add("US Dollar to Dogecoin price");        
-        indexList.add("12"); titlesList.add("Bitcoin to US Dollar price");
-        indexList.add("13"); titlesList.add("US Dollar to Bitcoin price");    
+        indexList.add("5"); titlesList.add("Dogecoin to QORT price");           
+        indexList.add("6"); titlesList.add("QORT to Ravencoin price");
+        indexList.add("7"); titlesList.add("Ravencoin to QORT price");     
+        indexList.add("8"); titlesList.add("QORT to Digibyte price");
+        indexList.add("9"); titlesList.add("Digibyte to QORT price"); 
+        indexList.add("10"); titlesList.add("QORT to Bitcoin price");
+        indexList.add("11"); titlesList.add("Bitcoin to QORT price");        
+        indexList.add("12"); titlesList.add("Litecoin to US Dollar price");
+        indexList.add("13"); titlesList.add("US Dollar to Litecoin price");        
+        indexList.add("14"); titlesList.add("Dogecoin to US Dollar price");
+        indexList.add("15"); titlesList.add("US Dollar to Dogecoin price");           
+        indexList.add("16"); titlesList.add("Ravencoin to US Dollar price");
+        indexList.add("17"); titlesList.add("US Dollar to Ravencoin price");   
+        indexList.add("18"); titlesList.add("Digibyte to US Dollar price");
+        indexList.add("19"); titlesList.add("US Dollar to Digibyte price");           
+        indexList.add("20"); titlesList.add("Bitcoin to US Dollar price");
+        indexList.add("21"); titlesList.add("US Dollar to Bitcoin price");   
         
-        indexList.add("14"); titlesList.add("LTC to QORT trades (in LTC)");
-        indexList.add("15"); titlesList.add("LTC to QORT trades (in QORT)");     
-        indexList.add("16"); titlesList.add("Total QORT to LTC traded");
-        indexList.add("17"); titlesList.add("Total LTC to QORT traded");
-        indexList.add("18"); titlesList.add("LTC to QORT trades (Total)");    
+        indexList.add("22"); titlesList.add("LTC to QORT trades (in LTC)");
+        indexList.add("23"); titlesList.add("LTC to QORT trades (in QORT)");     
+        indexList.add("24"); titlesList.add("Total QORT to LTC traded");
+        indexList.add("25"); titlesList.add("Total LTC to QORT traded");
+        indexList.add("26"); titlesList.add("LTC to QORT trades (Total)");  
         
-        indexList.add("19"); titlesList.add("DOGE to QORT trades (in DOGE)");
-        indexList.add("20"); titlesList.add("DOGE to QORT trades (in QORT)");  
-        indexList.add("21"); titlesList.add("Total QORT to DOGE traded");
-        indexList.add("22"); titlesList.add("Total DOGE to QORT traded");
-        indexList.add("23"); titlesList.add("DOGE to QORT trades (Total)");
+        indexList.add("27"); titlesList.add("DOGE to QORT trades (in DOGE)");
+        indexList.add("28"); titlesList.add("DOGE to QORT trades (in QORT)");  
+        indexList.add("29"); titlesList.add("Total QORT to DOGE traded");
+        indexList.add("30"); titlesList.add("Total DOGE to QORT traded");
+        indexList.add("31"); titlesList.add("DOGE to QORT trades (Total)");
         
-        indexList.add("24"); titlesList.add("BTC to QORT trades (in BTC)");
-        indexList.add("25"); titlesList.add("BTC to QORT trades (in QORT)");
-        indexList.add("26"); titlesList.add("Total QORT to BTC traded");
-        indexList.add("27"); titlesList.add("Total BTC to QORT traded");
-        indexList.add("28"); titlesList.add("BTC to QORT trades (Total)");
+        indexList.add("32"); titlesList.add("RAVEN to QORT trades (in RAVEN)");
+        indexList.add("33"); titlesList.add("RAVEN to QORT trades (in QORT)");  
+        indexList.add("34"); titlesList.add("Total QORT to RAVEN traded");
+        indexList.add("35"); titlesList.add("Total RAVEN to QORT traded");
+        indexList.add("36"); titlesList.add("RAVEN to QORT trades (Total)");
+        
+        indexList.add("37"); titlesList.add("DIGIBYTE to QORT trades (in DIGIBYTE)");
+        indexList.add("38"); titlesList.add("DIGIBYTE to QORT trades (in QORT)");  
+        indexList.add("39"); titlesList.add("Total QORT to DIGIBYTE traded");
+        indexList.add("40"); titlesList.add("Total DIGIBYTE to QORT traded");
+        indexList.add("41"); titlesList.add("DIGIBYTE to QORT trades (Total)");
+        
+        indexList.add("42"); titlesList.add("BTC to QORT trades (in BTC)");
+        indexList.add("43"); titlesList.add("BTC to QORT trades (in QORT)");
+        indexList.add("44"); titlesList.add("Total QORT to BTC traded");
+        indexList.add("45"); titlesList.add("Total BTC to QORT traded");
+        indexList.add("46"); titlesList.add("BTC to QORT trades (Total)");
        
-        indexList.add("29"); titlesList.add( "All trades (Total)");
-        indexList.add("30"); titlesList.add("Total QORT traded");
+        indexList.add("47"); titlesList.add( "All trades (Total)");
+        indexList.add("48"); titlesList.add("Total QORT traded");
         titleToIndexMap = new BidirectionalMap(indexList, titlesList);
     }
     
@@ -1706,14 +1818,22 @@ public class MarketPanel extends javax.swing.JPanel
         typeToQueryMap.put("BTC_QORT", "select timestamp,btc_per_qort,amount from btc_qort");
         typeToQueryMap.put("QORT_BTC", "select timestamp,qort_per_btc,amount from btc_qort");
         typeToQueryMap.put("DOGE_QORT", "select timestamp,doge_per_qort,amount from doge_qort");
-        typeToQueryMap.put("QORT_DOGE", "select timestamp,qort_per_doge,amount from doge_qort");
+        typeToQueryMap.put("QORT_DOGE", "select timestamp,qort_per_doge,amount from doge_qort");        
+        typeToQueryMap.put("RAVEN_QORT", "select timestamp,raven_per_qort,amount from raven_qort");
+        typeToQueryMap.put("QORT_RAVEN", "select timestamp,qort_per_raven,amount from raven_qort");        
+        typeToQueryMap.put("DIGIBYTE_QORT", "select timestamp,digibyte_per_qort,amount from digibyte_qort");
+        typeToQueryMap.put("QORT_DIGIBYTE", "select timestamp,qort_per_digibyte,amount from digibyte_qort");
         
         typeToQueryMap.put("USD_QORT", "select timestamp,usd_per_qort from usd_qort");
         typeToQueryMap.put("QORT_USD", "select timestamp,qort_per_usd from usd_qort");
         typeToQueryMap.put("USD_LTC", "select timestamp,usd_per_ltc from usd_ltc");
         typeToQueryMap.put("LTC_USD", "select timestamp,ltc_per_usd from usd_ltc");
         typeToQueryMap.put("USD_DOGE", "select timestamp,usd_per_doge from usd_doge");
-        typeToQueryMap.put("DOGE_USD", "select timestamp,doge_per_usd from usd_doge");
+        typeToQueryMap.put("DOGE_USD", "select timestamp,doge_per_usd from usd_doge");        
+        typeToQueryMap.put("USD_RAVEN", "select timestamp,usd_per_raven from usd_raven");
+        typeToQueryMap.put("RAVEN_USD", "select timestamp,raven_per_usd from usd_raven");        
+        typeToQueryMap.put("USD_DIGIBYTE", "select timestamp,usd_per_digibyte from usd_digibyte");
+        typeToQueryMap.put("DIGIBYTE_USD", "select timestamp,digibyte_per_usd from usd_digibyte");        
         typeToQueryMap.put("USD_BTC", "select timestamp,usd_per_btc from usd_btc");
         typeToQueryMap.put("BTC_USD", "select timestamp,btc_per_usd from usd_btc");
         
@@ -1735,9 +1855,29 @@ public class MarketPanel extends javax.swing.JPanel
         typeToQueryMap.put("DOGE_QORT_AMOUNT", "select timestamp,total_doge from doge_trades");
         typeToQueryMap.put("DOGE_TRADES_TOTAL", "select timestamp from doge_trades"); 
         
+        typeToQueryMap.put("QORT_RAVEN_TRADE", "select timestamp,qort_per_raven,amount from raven_trades");
+        typeToQueryMap.put("RAVEN_QORT_TRADE", "select timestamp,raven_per_qort,amount from raven_trades");   
+        typeToQueryMap.put("QORT_RAVEN_AMOUNT", "select timestamp,amount from raven_trades");
+        typeToQueryMap.put("RAVEN_QORT_AMOUNT", "select timestamp,total_raven from raven_trades");
+        typeToQueryMap.put("RAVEN_TRADES_TOTAL", "select timestamp from raven_trades"); 
+        
+        typeToQueryMap.put("QORT_DIGIBYTE_TRADE", "select timestamp,qort_per_digibyte,amount from digibyte_trades");
+        typeToQueryMap.put("DIGIBYTE_QORT_TRADE", "select timestamp,digibyte_per_qort,amount from digibyte_trades");   
+        typeToQueryMap.put("QORT_DIGIBYTE_AMOUNT", "select timestamp,amount from digibyte_trades");
+        typeToQueryMap.put("DIGIBYTE_QORT_AMOUNT", "select timestamp,total_digibyte from digibyte_trades");
+        typeToQueryMap.put("DIGIBYTE_TRADES_TOTAL", "select timestamp from digibyte_trades"); 
+        
         typeToQueryMap.put("TOTAL_TRADES","select timestamp from all_trades");
         typeToQueryMap.put("TOTAL_QORT_TRADED","select timestamp,amount from all_trades");
-    }   
+    }
+    
+    protected void showStyleMenu()
+    {
+        tabbedPane.setSelectedIndex(0);
+        styleMenuScrollpane.setVisible(true);
+        toggleStyleButton.setSelected(true);
+        chartsMenu.setVisible(true);
+    }
      
      private void showColorChooser(JLabel colorBoxLabel)
      {
@@ -1915,7 +2055,7 @@ public class MarketPanel extends javax.swing.JPanel
              
              String tabTitle = tabbedPane.getTitleAt(i);
              
-             if(tabTitle.endsWith("trades") || tabTitle.equals("Update status"))
+             if(tabTitle.endsWith("trades") || tabTitle.equals("Get latest trades"))
              {                 
                  JSplitPane splitPane = (JSplitPane) tabbedPane.getComponent(i);    
                  JViewport viewport = (JViewport) ((JScrollPane)splitPane.getBottomComponent()).getComponent(0);
@@ -1933,7 +2073,7 @@ public class MarketPanel extends javax.swing.JPanel
                  table.getTableHeader().setForeground(cmpFontColor);
                  table.getTableHeader().setFont(table.getFont());
                  
-                 if(tabTitle.equals("Update status"))
+                 if(tabTitle.equals("Get latest trades"))
                  {
                      JPanel panel = (JPanel)splitPane.getTopComponent();
                      panel.setBackground(bgColor);
@@ -2052,7 +2192,7 @@ public class MarketPanel extends javax.swing.JPanel
      {
          SwingUtilities.invokeLater(()->
          {
-             ltcTradesTab.setDividerLocation(0.5);
+             tradesTab.setDividerLocation(0.5);
              btcTradesTab.setDividerLocation(0.5);
              dogeTradesTab.setDividerLocation(0.5);         
          });
@@ -2498,7 +2638,7 @@ public class MarketPanel extends javax.swing.JPanel
         divider = new javax.swing.JPanel();
         dividerButton = new javax.swing.JButton();
         desktopPane = new javax.swing.JDesktopPane();
-        ltcTradesTab = new javax.swing.JSplitPane();
+        tradesTab = new javax.swing.JSplitPane();
         ltcTradesScrollpane = new javax.swing.JScrollPane();
         ltcTradesTable = new JTable()
         {
@@ -2534,6 +2674,30 @@ public class MarketPanel extends javax.swing.JPanel
         };
         dogeTradesTable.getTableHeader().setReorderingAllowed(false);
         dogeTradesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ravenTradesTab = new javax.swing.JSplitPane();
+        ravenChartPlaceholder = new javax.swing.JPanel();
+        ravenTradesScrollpane = new javax.swing.JScrollPane();
+        ravenTradesTable = new JTable()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        ravenTradesTable.getTableHeader().setReorderingAllowed(false);
+        ravenTradesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        digibyteTradesTab = new javax.swing.JSplitPane();
+        digibyteChartPlaceholder = new javax.swing.JPanel();
+        digibyteTradesScrollpane = new javax.swing.JScrollPane();
+        digibyteTradesTable = new JTable()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        digibyteTradesTable.getTableHeader().setReorderingAllowed(false);
+        digibyteTradesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         updateTab = new javax.swing.JSplitPane();
         allTxMenuPanel = new javax.swing.JPanel();
         updateButton = new javax.swing.JButton();
@@ -3842,17 +4006,17 @@ public class MarketPanel extends javax.swing.JPanel
 
         tabbedPane.addTab("Charts", chartsTab);
 
-        ltcTradesTab.setDividerLocation(200);
-        ltcTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-        ltcTradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
+        tradesTab.setDividerLocation(200);
+        tradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        tradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
         {
             public void componentHidden(java.awt.event.ComponentEvent evt)
             {
-                ltcTradesTabComponentHidden(evt);
+                tradesTabComponentHidden(evt);
             }
             public void componentShown(java.awt.event.ComponentEvent evt)
             {
-                ltcTradesTabComponentShown(evt);
+                tradesTabComponentShown(evt);
             }
         });
 
@@ -3888,7 +4052,7 @@ public class MarketPanel extends javax.swing.JPanel
         });
         ltcTradesScrollpane.setViewportView(ltcTradesTable);
 
-        ltcTradesTab.setRightComponent(ltcTradesScrollpane);
+        tradesTab.setRightComponent(ltcTradesScrollpane);
 
         javax.swing.GroupLayout ltcChartPlaceholderLayout = new javax.swing.GroupLayout(ltcChartPlaceholder);
         ltcChartPlaceholder.setLayout(ltcChartPlaceholderLayout);
@@ -3901,9 +4065,9 @@ public class MarketPanel extends javax.swing.JPanel
             .addGap(0, 100, Short.MAX_VALUE)
         );
 
-        ltcTradesTab.setLeftComponent(ltcChartPlaceholder);
+        tradesTab.setLeftComponent(ltcChartPlaceholder);
 
-        tabbedPane.addTab("LTC trades", ltcTradesTab);
+        tabbedPane.addTab("LTC trades", tradesTab);
 
         btcTradesTab.setDividerLocation(200);
         btcTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
@@ -4031,6 +4195,132 @@ public class MarketPanel extends javax.swing.JPanel
 
         tabbedPane.addTab("Doge trades", dogeTradesTab);
 
+        ravenTradesTab.setDividerLocation(200);
+        ravenTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        ravenTradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
+        {
+            public void componentHidden(java.awt.event.ComponentEvent evt)
+            {
+                ravenTradesTabComponentHidden(evt);
+            }
+            public void componentShown(java.awt.event.ComponentEvent evt)
+            {
+                ravenTradesTabComponentShown(evt);
+            }
+        });
+
+        javax.swing.GroupLayout ravenChartPlaceholderLayout = new javax.swing.GroupLayout(ravenChartPlaceholder);
+        ravenChartPlaceholder.setLayout(ravenChartPlaceholderLayout);
+        ravenChartPlaceholderLayout.setHorizontalGroup(
+            ravenChartPlaceholderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1245, Short.MAX_VALUE)
+        );
+        ravenChartPlaceholderLayout.setVerticalGroup(
+            ravenChartPlaceholderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 200, Short.MAX_VALUE)
+        );
+
+        ravenTradesTab.setLeftComponent(ravenChartPlaceholder);
+
+        ravenTradesTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][]
+            {
+
+            },
+            new String []
+            {
+                "Trade time", "Block height", "Amount", "Total RAVEN", "RAVEN per QORT", "QORT per RAVEN", "Signature"
+            }
+        )
+        {
+            Class[] types = new Class []
+            {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean []
+            {
+                false, false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex)
+            {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex)
+            {
+                return canEdit [columnIndex];
+            }
+        });
+        ravenTradesScrollpane.setViewportView(ravenTradesTable);
+
+        ravenTradesTab.setRightComponent(ravenTradesScrollpane);
+
+        tabbedPane.addTab("Ravencoin trades", ravenTradesTab);
+
+        digibyteTradesTab.setDividerLocation(200);
+        digibyteTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        digibyteTradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
+        {
+            public void componentHidden(java.awt.event.ComponentEvent evt)
+            {
+                digibyteTradesTabComponentHidden(evt);
+            }
+            public void componentShown(java.awt.event.ComponentEvent evt)
+            {
+                digibyteTradesTabComponentShown(evt);
+            }
+        });
+
+        javax.swing.GroupLayout digibyteChartPlaceholderLayout = new javax.swing.GroupLayout(digibyteChartPlaceholder);
+        digibyteChartPlaceholder.setLayout(digibyteChartPlaceholderLayout);
+        digibyteChartPlaceholderLayout.setHorizontalGroup(
+            digibyteChartPlaceholderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1245, Short.MAX_VALUE)
+        );
+        digibyteChartPlaceholderLayout.setVerticalGroup(
+            digibyteChartPlaceholderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 200, Short.MAX_VALUE)
+        );
+
+        digibyteTradesTab.setLeftComponent(digibyteChartPlaceholder);
+
+        digibyteTradesTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][]
+            {
+
+            },
+            new String []
+            {
+                "Trade time", "Block height", "Amount", "Total DGB", "DGB per QORT", "QORT per DGB", "Signature"
+            }
+        )
+        {
+            Class[] types = new Class []
+            {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean []
+            {
+                false, false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex)
+            {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex)
+            {
+                return canEdit [columnIndex];
+            }
+        });
+        digibyteTradesScrollpane.setViewportView(digibyteTradesTable);
+
+        digibyteTradesTab.setRightComponent(digibyteTradesScrollpane);
+
+        tabbedPane.addTab("Digibyte trades", digibyteTradesTab);
+
         updateTab.setDividerLocation(300);
         updateTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
@@ -4122,7 +4412,7 @@ public class MarketPanel extends javax.swing.JPanel
 
         updateTab.setRightComponent(jScrollPane1);
 
-        tabbedPane.addTab("Update status", updateTab);
+        tabbedPane.addTab("Get latest trades", updateTab);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -4245,22 +4535,22 @@ public class MarketPanel extends javax.swing.JPanel
         ((ChartWindow)btcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
     }//GEN-LAST:event_btcTradesTabComponentHidden
 
-    private void ltcTradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ltcTradesTabComponentShown
-    {//GEN-HEADEREND:event_ltcTradesTabComponentShown
+    private void tradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_tradesTabComponentShown
+    {//GEN-HEADEREND:event_tradesTabComponentShown
         //Selecting the ltc trades chart window during init didn't work (selected frame is more estethic)
-        try{((ChartWindow) ltcTradesTab.getTopComponent()).setSelected(true);}
+        try{((ChartWindow) tradesTab.getTopComponent()).setSelected(true);}
         catch (PropertyVetoException e){}
         //ensures saveCurrentArrangement doesn't get called when the ltc trades chartwindow is resized
         chartWindowFocused = false;
-    }//GEN-LAST:event_ltcTradesTabComponentShown
+    }//GEN-LAST:event_tradesTabComponentShown
 
-    private void ltcTradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ltcTradesTabComponentHidden
-    {//GEN-HEADEREND:event_ltcTradesTabComponentHidden
-        if(ltcTradesTab.getTopComponent() instanceof ChartWindow == false)
+    private void tradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_tradesTabComponentHidden
+    {//GEN-HEADEREND:event_tradesTabComponentHidden
+        if(tradesTab.getTopComponent() instanceof ChartWindow == false)
             return;
 
-        ((ChartWindow)ltcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
-    }//GEN-LAST:event_ltcTradesTabComponentHidden
+        ((ChartWindow)tradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
+    }//GEN-LAST:event_tradesTabComponentHidden
 
     private void chartsTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_chartsTabComponentHidden
     {//GEN-HEADEREND:event_chartsTabComponentHidden
@@ -4891,6 +5181,36 @@ public class MarketPanel extends javax.swing.JPanel
         toggleStyleButton.setText(toggleStyleButton.isSelected() ? "Hide style menu" : "Show style menu");
     }//GEN-LAST:event_toggleStyleButtonActionPerformed
 
+    private void ravenTradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ravenTradesTabComponentHidden
+    {//GEN-HEADEREND:event_ravenTradesTabComponentHidden
+        if(ravenTradesTab.getTopComponent() instanceof ChartWindow == false)
+            return;
+
+        ((ChartWindow)ravenTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);      
+    }//GEN-LAST:event_ravenTradesTabComponentHidden
+
+    private void ravenTradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ravenTradesTabComponentShown
+    {//GEN-HEADEREND:event_ravenTradesTabComponentShown
+        try{((ChartWindow) ravenTradesTab.getTopComponent()).setSelected(true);}
+        catch (PropertyVetoException e){}
+        chartWindowFocused = false;
+    }//GEN-LAST:event_ravenTradesTabComponentShown
+
+    private void digibyteTradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_digibyteTradesTabComponentHidden
+    {//GEN-HEADEREND:event_digibyteTradesTabComponentHidden
+        if(digibyteTradesTab.getTopComponent() instanceof ChartWindow == false)
+            return;
+
+        ((ChartWindow)digibyteTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
+    }//GEN-LAST:event_digibyteTradesTabComponentHidden
+
+    private void digibyteTradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_digibyteTradesTabComponentShown
+    {//GEN-HEADEREND:event_digibyteTradesTabComponentShown
+        try{((ChartWindow) digibyteTradesTab.getTopComponent()).setSelected(true);}
+        catch (PropertyVetoException e){}
+        chartWindowFocused = false;
+    }//GEN-LAST:event_digibyteTradesTabComponentShown
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel allTxMenuPanel;
@@ -4925,6 +5245,10 @@ public class MarketPanel extends javax.swing.JPanel
     protected javax.swing.JDesktopPane desktopPane;
     protected javax.swing.JLabel dialogColorLabel;
     protected javax.swing.JLabel dialogTxtColorLabel;
+    private javax.swing.JPanel digibyteChartPlaceholder;
+    private javax.swing.JScrollPane digibyteTradesScrollpane;
+    private javax.swing.JSplitPane digibyteTradesTab;
+    protected javax.swing.JTable digibyteTradesTable;
     private javax.swing.JPanel divider;
     private javax.swing.JButton dividerButton;
     protected javax.swing.JLabel dividerColorLabel;
@@ -4975,12 +5299,15 @@ public class MarketPanel extends javax.swing.JPanel
     protected javax.swing.JLabel lookupStatusLabel;
     private javax.swing.JPanel ltcChartPlaceholder;
     private javax.swing.JScrollPane ltcTradesScrollpane;
-    private javax.swing.JSplitPane ltcTradesTab;
     protected javax.swing.JTable ltcTradesTable;
     protected javax.swing.JCheckBox movingAverageBox;
     protected javax.swing.JLabel plotColorLabel;
     protected javax.swing.JProgressBar progressBar;
     private javax.swing.JCheckBox randomizeCheckbox;
+    private javax.swing.JPanel ravenChartPlaceholder;
+    private javax.swing.JScrollPane ravenTradesScrollpane;
+    private javax.swing.JSplitPane ravenTradesTab;
+    protected javax.swing.JTable ravenTradesTable;
     private javax.swing.JButton saveArrangeButton;
     private javax.swing.JButton saveLayoutButton;
     private javax.swing.JButton saveStyleButton;
@@ -5009,6 +5336,7 @@ public class MarketPanel extends javax.swing.JPanel
     private javax.swing.JScrollPane tradeInfoScrollpane;
     private javax.swing.JTable tradeInfoTable;
     protected javax.swing.JCheckBox tradeVolumeBox;
+    private javax.swing.JSplitPane tradesTab;
     protected javax.swing.JTable txTable;
     private javax.swing.JLabel uiLabel1;
     protected javax.swing.JButton updateButton;

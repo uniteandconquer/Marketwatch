@@ -27,6 +27,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
@@ -273,6 +274,7 @@ public class GUI extends javax.swing.JFrame
                 c.setForeground(cmpFontColor);
             }
         }
+        SwingUtilities.updateComponentTreeUI(monitorPanel);
 
         tipJarPanel.setBackground(bgColor);
         for (Component c : tipJarPanel.getComponents())
@@ -295,7 +297,13 @@ public class GUI extends javax.swing.JFrame
         appearanceMenu.setBackground(bgColor);
         for (Component c : appearanceMenu.getComponents())
         {
-
+            if (c instanceof JMenuItem)
+            {
+                c.setBackground(cmpColor);
+                ((JMenuItem) c).setOpaque(true);
+                c.setFont(new Font(fontType, c.getFont().getStyle(), c.getFont().getSize()));
+                c.setForeground(cmpFontColor);
+            }
             if (c instanceof JRadioButtonMenuItem)
             {
                 c.setBackground(cmpColor);
@@ -519,6 +527,7 @@ public class GUI extends javax.swing.JFrame
 
         appearanceGroup = new javax.swing.ButtonGroup();
         appearanceMenu = new javax.swing.JPopupMenu();
+        styleItem = new javax.swing.JMenuItem();
         trayPopup = new javax.swing.JDialog();
         popUpLabel = new javax.swing.JLabel();
         donateDialog = new javax.swing.JDialog();
@@ -565,13 +574,23 @@ public class GUI extends javax.swing.JFrame
             }
         });
 
+        styleItem.setText("Show style menu");
+        styleItem.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                styleItemActionPerformed(evt);
+            }
+        });
+        appearanceMenu.add(styleItem);
+
         trayPopup.setUndecorated(true);
 
         popUpLabel.setBackground(new java.awt.Color(204, 202, 202));
         popUpLabel.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         popUpLabel.setForeground(new java.awt.Color(0, 0, 0));
         popUpLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        popUpLabel.setText("<html><div style='text-align: center;'>Mapping session in progress<br/>MintMeister is running in the background<br/><br/> Double click on the system tray icon to open the UI<br/><br/> To exit the program, click 'Exit' in the menu bar<br/> You can also right click the system tray icon and click 'Exit'</div><html>");
+        popUpLabel.setText("<html><div style='text-align: center;'>Mapping session in progress<br/>Marketwatch is running in the background<br/><br/> Double click on the system tray icon to open the UI<br/><br/> To exit the program, click 'Exit' in the menu bar<br/> You can also right click the system tray icon and click 'Exit'</div><html>");
         popUpLabel.setBorder(javax.swing.BorderFactory.createCompoundBorder(new javax.swing.border.LineBorder(new java.awt.Color(49, 0, 0), 4, true), new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED, new java.awt.Color(54, 56, 72), new java.awt.Color(84, 55, 55), new java.awt.Color(58, 77, 96), new java.awt.Color(72, 50, 50))));
         popUpLabel.setOpaque(true);
         popUpLabel.setPreferredSize(new java.awt.Dimension(380, 120));
@@ -644,7 +663,6 @@ public class GUI extends javax.swing.JFrame
 
         dismissButton.setFont(new java.awt.Font("Bahnschrift", 0, 12)); // NOI18N
         dismissButton.setText("<html><div style='text-align: center;'>No thanks<br/>Don't show again</div><html>");
-        dismissButton.setActionCommand("<html><div style='text-align: center;'>No thanks<br/>Don't show again</div><html>");
         dismissButton.setPreferredSize(new java.awt.Dimension(150, 45));
         dismissButton.addActionListener(new java.awt.event.ActionListener()
         {
@@ -1095,6 +1113,12 @@ public class GUI extends javax.swing.JFrame
         exitInitiated(false);
     }//GEN-LAST:event_exitButtonActionPerformed
 
+    private void styleItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_styleItemActionPerformed
+    {//GEN-HEADEREND:event_styleItemActionPerformed
+        marketButtonActionPerformed(null);
+        marketPanel.showStyleMenu();
+    }//GEN-LAST:event_styleItemActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton appearanceButton;
@@ -1128,6 +1152,7 @@ public class GUI extends javax.swing.JFrame
     private javax.swing.JButton remindLaterButton;
     private javax.swing.JPanel splashPanel;
     protected javax.swing.JLabel statusLabel;
+    private javax.swing.JMenuItem styleItem;
     protected javax.swing.JPanel tipJarPanel;
     private javax.swing.JScrollPane tipJarScrollPane;
     protected javax.swing.JPanel toolbar;

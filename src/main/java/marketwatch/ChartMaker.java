@@ -350,7 +350,10 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
         XYPlot plot = (XYPlot) cplot.getSubplots().get(0); 
         XYDataset dataset = plot.getDataset();
 
-        ValueAxis domain = plot.getDomainAxis();        
+        ValueAxis domain = plot.getDomainAxis();    
+        if(dataset.getItemCount(0) == 0)
+            return;
+        
         double firstEntry = dataset.getXValue(0, 0);
         double lastEntry = dataset.getXValue(0, dataset.getItemCount(0) -1);
         double begin = days == 0 ? firstEntry - 86400000L : lastEntry - (days * 86400000L);
@@ -388,8 +391,12 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
         }
 
         //add 5% insets to upper and lower margins of the y-axis
-        double insets = (highest - lowest) * 0.05;            
-        range.setRange(lowest - insets, highest + insets);    
+        double insets = (highest - lowest) * 0.05;  
+        
+        double lower = lowest - insets;
+        double upper = highest + insets;
+        if(upper > lower)
+            range.setRange(lowest - insets, highest + insets);    
 
         if(filterPeaks)
             range.zoomRange(-3, 3);
@@ -620,7 +627,9 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
             linePlot.setDomainCrosshairPaint(Color.RED);
             linePlot.setDomainCrosshairStroke(new BasicStroke(1.25f));
             linePlot.setDomainCrosshairVisible(true);
-            linePlot.setDomainCrosshairValue(linePlot.getDataset().getXValue(0, 0));            
+            
+            if(linePlot.getDataset().getItemCount(0) > 0)
+                linePlot.setDomainCrosshairValue(linePlot.getDataset().getXValue(0, 0));            
         }
     }
 
@@ -947,7 +956,6 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
         // return a new chart containing the overlaid plot...
         chart = new JFreeChart(title,JFreeChart.DEFAULT_TITLE_FONT, cplot, true);
         chart.setBackgroundPaint(Color.white);
-        chart.addSubtitle(new TextTitle(Main.BUNDLE.getString("chartSubtitle")));
 
         return chart;
     } 
@@ -1019,7 +1027,7 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
         }
         catch (SQLException e)
         {
-            mintmeister.BackgroundService.AppendLog(e);
+            BackgroundService.AppendLog(e);
         }
         return null;  
     }
