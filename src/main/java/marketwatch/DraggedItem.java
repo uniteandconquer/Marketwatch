@@ -1,5 +1,7 @@
 package marketwatch;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 
@@ -14,6 +16,12 @@ public class DraggedItem extends javax.swing.JDialog
     
     private void initUI(ChartItem item)
     {
+        //Some linux systems do not support translucent windows
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        if(gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT))
+            setOpacity(0.85f);
+        
         iconLabel1.setIcon(item.icon1);
         iconLabel2.setIcon(item.icon2);
         var border = (TitledBorder)mainPanel.getBorder();
@@ -46,7 +54,6 @@ public class DraggedItem extends javax.swing.JDialog
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setAlwaysOnTop(true);
         setUndecorated(true);
-        setOpacity(0.85F);
         setResizable(false);
         getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.LINE_AXIS));
 

@@ -4050,6 +4050,7 @@ public class MarketPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        ltcTradesTable.setFillsViewportHeight(true);
         ltcTradesScrollpane.setViewportView(ltcTradesTable);
 
         tradesTab.setRightComponent(ltcTradesScrollpane);
@@ -4126,6 +4127,7 @@ public class MarketPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        btcTradesTable.setFillsViewportHeight(true);
         btcTradesScrollpane.setViewportView(btcTradesTable);
 
         btcTradesTab.setRightComponent(btcTradesScrollpane);
@@ -4189,6 +4191,7 @@ public class MarketPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        dogeTradesTable.setFillsViewportHeight(true);
         dogeTradesScrollpane.setViewportView(dogeTradesTable);
 
         dogeTradesTab.setRightComponent(dogeTradesScrollpane);
@@ -4252,6 +4255,7 @@ public class MarketPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        ravenTradesTable.setFillsViewportHeight(true);
         ravenTradesScrollpane.setViewportView(ravenTradesTable);
 
         ravenTradesTab.setRightComponent(ravenTradesScrollpane);
@@ -4315,6 +4319,7 @@ public class MarketPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        digibyteTradesTable.setFillsViewportHeight(true);
         digibyteTradesScrollpane.setViewportView(digibyteTradesTable);
 
         digibyteTradesTab.setRightComponent(digibyteTradesScrollpane);

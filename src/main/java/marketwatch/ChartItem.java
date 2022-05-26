@@ -103,7 +103,7 @@ public class ChartItem extends javax.swing.JPanel
                     }                        
                 }
                 else
-                {
+                {                    
                     //check for single click (selection)
                     if(!isSelected)
                     {                    
