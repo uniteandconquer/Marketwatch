@@ -5,6 +5,8 @@ import customized.CrosshairOverlay;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -644,20 +646,24 @@ public class ChartMaker extends ApplicationFrame implements ChartMouseListener
     {         
         SwingUtilities.invokeLater(()->
         {
+            //Some linux systems do not support translucent windows
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice gd = ge.getDefaultScreenDevice();
+            
             Color endColor;
              //only enable chartDialog transparancy for non linux systems
             //Linux rendering on transparent background is blurry to the point of unreadable
-            if(myOS.contains("nix") || myOS.contains("nux"))
-            {
-                chartDialog.getRootPane ().setOpaque (true);
-                endColor = color;
-                chartDialog.getContentPane ().setBackground (endColor);
-            }
-            else
+            if(gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT))
             {
                 chartDialog.getRootPane ().setOpaque (false);
                 chartDialog.getContentPane ().setBackground (new Color (0, 0, 0, 0));
                 endColor = new Color (color.getRed(), color.getGreen(), color.getBlue(), 180);
+            }
+            else
+            {
+                chartDialog.getRootPane ().setOpaque (true);
+                endColor = color;
+                chartDialog.getContentPane ().setBackground (endColor);
             } 
             chartDialog.setBackground (endColor); 
 
