@@ -28,6 +28,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeoutException;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -65,6 +67,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.XYPlot;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -127,7 +130,10 @@ public class MarketPanel extends javax.swing.JPanel
         else
         {
            fillTradesTables();
+            fillTradersTable("total_qort_sold", "desc");
         }   
+        
+        
         
     }//end initialise()
     
@@ -306,6 +312,62 @@ public class MarketPanel extends javax.swing.JPanel
            }
            
         });        
+    }      
+      
+    protected void fillTradersTable(String headerName, String orderKey)
+    {
+        try(Connection connection = ConnectionDB.getConnection("trades", Folders.DB.get()))
+        {
+            if(!dbManager.TableExists("traders", connection))
+                return;
+            
+            //will prevent array index out of bounds error thrown due to selection link with single trader tx table
+            buyersAndSellersTable.clearSelection();
+            
+            DefaultTableModel model = (DefaultTableModel) buyersAndSellersTable.getModel();
+            model.setRowCount(0);
+            
+            switch(headerName)
+            {
+                case "Total QORT bought":
+                    headerName = "total_qort_bought";
+                    break;
+                case "Total QORT sold":
+                    headerName = "total_qort_sold";
+                    break;
+                case "Genesis amount (QORT)":
+                    headerName = "genesis_amount";
+                    break;
+            }            
+            
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from traders order by " + headerName + " " + orderKey);
+            
+            while(resultSet.next())
+            {
+
+                String totalSold = String.format("%,.2f", resultSet.getDouble("total_qort_sold"));
+                String totalBought = String.format("%,.2f", resultSet.getDouble("total_qort_bought"));
+                
+                double amount = resultSet.getDouble("genesis_amount");
+                String genesisString = amount == 0 ? "" : String.format("%,.2f", amount);
+
+                //using strings for formatting and allignment purposes
+                model.addRow(new Object[]
+                {
+                    resultSet.getString("address"),
+                    resultSet.getString("name"),
+                    totalBought,
+                    totalSold,
+                    genesisString
+                });
+            }            
+        }
+        catch (Exception e)
+        {
+            BackgroundService.AppendLog(e);
+        }
+            
     }
     
     protected void updateCharts()
@@ -691,6 +753,41 @@ public class MarketPanel extends javax.swing.JPanel
             public void startedResizing(){}
         });
         
+        buyersAndSellersTable.getTableHeader().addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                singleTraderTable.clearSelection();
+                orderKey = orderKey.equals("asc") ? "desc" : "asc";  
+                int col = buyersAndSellersTable.columnAtPoint(e.getPoint());
+                String headerName = buyersAndSellersTable.getColumnName(col);                
+                fillTradersTable(headerName,orderKey);
+            }
+        });   
+        
+        //Not using a listSeletionListener because it gets triggered on every 'addRow()' event when filling the table
+        buyersAndSellersTable.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseReleased(MouseEvent mouseEvent)
+            {
+                try (Connection connection = ConnectionDB.getConnection("trades", Folders.DB.get()))
+                {
+                    String address = buyersAndSellersTable.getValueAt(buyersAndSellersTable.getSelectedRow(), 0).toString();
+
+                    String condition = "where seller = " + Utilities.SingleQuotedString(address) + " or buyer = " + Utilities.SingleQuotedString(address);
+
+                    dbManager.FillJTableByCondition("buyers_sellers", condition, singleTraderTable, connection);
+                }
+                catch (Exception e)
+                {
+                    BackgroundService.AppendLog(e);
+                }
+            }
+        });
+        
+        
        // <editor-fold defaultstate="collapsed" desc="Lists listeners"> 
         arrangementsList.addMouseListener(new MouseAdapter()
         {
@@ -896,6 +993,9 @@ public class MarketPanel extends javax.swing.JPanel
                         addChartItemToList(Chart.TOTAL_TRADES.toString(), qortIcon, multiIcon, chartItems,true);  
                         addChartItemToList(Chart.TOTAL_QORT_TRADED.toString(), qortIcon, multiIcon, chartItems,true);   
                         break;
+                    case "BUYERS_SELLERS":
+                    case "TRADERS":
+                        break;
                     default:
                         System.err.println("FOUND UNIITIALIZED TABLE : " + table);
                 }
@@ -920,7 +1020,7 @@ public class MarketPanel extends javax.swing.JPanel
                 chartsList.repaint();                
             });
             
-            initTradesTab(Chart.LTC_QORT_TRADE, connection, tradesTab, ltcTradesTable, ltcTradesScrollpane);
+            initTradesTab(Chart.LTC_QORT_TRADE, connection, ltcTradesTab, ltcTradesTable, ltcTradesScrollpane);
             initTradesTab(Chart.DOGE_QORT_TRADE, connection, dogeTradesTab, dogeTradesTable, dogeTradesScrollpane);
             initTradesTab(Chart.RAVEN_QORT_TRADE, connection, ravenTradesTab, ravenTradesTable, ravenTradesScrollpane);
             initTradesTab(Chart.DIGIBYTE_QORT_TRADE, connection, digibyteTradesTab, digibyteTradesTable, digibyteTradesScrollpane);
@@ -1247,7 +1347,7 @@ public class MarketPanel extends javax.swing.JPanel
     {       
         ChartStyle style = copyChartStyle(table, layoutName, folder, extension);
         
-        JSplitPane[] tradesTabs = {tradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
+        JSplitPane[] tradesTabs = {ltcTradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
         
         for(JSplitPane tab : tradesTabs)
         {
@@ -1265,11 +1365,11 @@ public class MarketPanel extends javax.swing.JPanel
     
     private void enableTradeTabItems()
     {
-        JSplitPane[] tradesTabs = {tradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
+        JSplitPane[] tradesTabs = {ltcTradesTab,dogeTradesTab,ravenTradesTab,digibyteTradesTab,btcTradesTab};
         
         for(JSplitPane tab : tradesTabs)
         {
-            ChartWindow tradesWindow = (ChartWindow) tradesTab.getTopComponent();
+            ChartWindow tradesWindow = (ChartWindow) tab.getTopComponent();
             tradesWindow.flipPairButton.setVisible(true);
             tradesWindow.peaksCheckbox.setVisible(true);
             tradesWindow.showVolumeBox.setVisible(true);            
@@ -1290,7 +1390,7 @@ public class MarketPanel extends javax.swing.JPanel
         
         ((ChartWindow) dogeTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
         ((ChartWindow) btcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
-        ((ChartWindow)tradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
+        ((ChartWindow)ltcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
     }
     
     private void setChartItemVisible(String title, boolean isVisible)
@@ -2060,18 +2160,8 @@ public class MarketPanel extends javax.swing.JPanel
                  JSplitPane splitPane = (JSplitPane) tabbedPane.getComponent(i);    
                  JViewport viewport = (JViewport) ((JScrollPane)splitPane.getBottomComponent()).getComponent(0);
                  JTable table = (JTable) viewport.getComponent(0);
-                 table.setBackground(bgColor);
-                 table.setFont(new Font(fontsBox.getSelectedItem().toString(), table.getFont().getStyle(), table.getFont().getSize()));
-                 table.setForeground(fontColor);
-                 table.setSelectionBackground(cmpColor);
-                 table.setSelectionForeground(cmpFontColor);
-                 table.setShowGrid(true);
-                 table.setGridColor(fontColor);
                  
-                 //does not work for all L&F (Nimbus / windows)
-                 table.getTableHeader().setBackground(cmpColor);
-                 table.getTableHeader().setForeground(cmpFontColor);
-                 table.getTableHeader().setFont(table.getFont());
+                 updateTableUI(table, bgColor, fontColor, cmpColor, cmpFontColor);
                  
                  if(tabTitle.equals("Get latest trades"))
                  {
@@ -2099,15 +2189,11 @@ public class MarketPanel extends javax.swing.JPanel
                      }
                  }
              }
-         }   
+         }  
          
-         tradeInfoTable.setBackground(bgColor);
-         tradeInfoTable.setFont(new Font(fontsBox.getSelectedItem().toString(), tradeInfoTable.getFont().getStyle(), tradeInfoTable.getFont().getSize()));
-         tradeInfoTable.setForeground(fontColor);
-         tradeInfoTable.setSelectionBackground(cmpColor);
-         tradeInfoTable.setSelectionForeground(cmpFontColor);
-         tradeInfoTable.setShowGrid(true);
-         tradeInfoTable.setGridColor(fontColor);
+        updateTableUI(buyersAndSellersTable, bgColor, fontColor, cmpColor, cmpFontColor);
+        updateTableUI(singleTraderTable, bgColor, fontColor, cmpColor, cmpFontColor); 
+        updateTableUI(tradeInfoTable, bgColor, fontColor, cmpColor, cmpFontColor); 
                   
          //</editor-fold>
          
@@ -2115,6 +2201,22 @@ public class MarketPanel extends javax.swing.JPanel
          
          updateGuiStyleLabels();    
          updatePopOutMenusDimension();
+     }
+     
+     private void updateTableUI(JTable table,Color bgColor,Color fontColor,Color cmpColor,Color cmpFontColor)
+     {
+         table.setBackground(bgColor);
+         table.setFont(new Font(fontsBox.getSelectedItem().toString(), table.getFont().getStyle(), table.getFont().getSize()));
+         table.setForeground(fontColor);
+         table.setSelectionBackground(cmpColor);
+         table.setSelectionForeground(cmpFontColor);
+         table.setShowGrid(true);
+         table.setGridColor(fontColor);
+
+         //does not work for all L&F (Nimbus / windows)
+         table.getTableHeader().setBackground(cmpColor);
+         table.getTableHeader().setForeground(cmpFontColor);
+         table.getTableHeader().setFont(table.getFont());
      }
      
      private void updateGuiStyleLabels()
@@ -2192,7 +2294,7 @@ public class MarketPanel extends javax.swing.JPanel
      {
          SwingUtilities.invokeLater(()->
          {
-             tradesTab.setDividerLocation(0.5);
+             ltcTradesTab.setDividerLocation(0.5);
              btcTradesTab.setDividerLocation(0.5);
              dogeTradesTab.setDividerLocation(0.5);         
          });
@@ -2638,7 +2740,7 @@ public class MarketPanel extends javax.swing.JPanel
         divider = new javax.swing.JPanel();
         dividerButton = new javax.swing.JButton();
         desktopPane = new javax.swing.JDesktopPane();
-        tradesTab = new javax.swing.JSplitPane();
+        ltcTradesTab = new javax.swing.JSplitPane();
         ltcTradesScrollpane = new javax.swing.JScrollPane();
         ltcTradesTable = new JTable()
         {
@@ -2698,6 +2800,12 @@ public class MarketPanel extends javax.swing.JPanel
         };
         digibyteTradesTable.getTableHeader().setReorderingAllowed(false);
         digibyteTradesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        buyersAndSellersTab = new javax.swing.JSplitPane();
+        singleTraderScrollPane = new javax.swing.JScrollPane();
+        singleTraderTable = new javax.swing.JTable();
+        buyersAndSellersPane = new javax.swing.JScrollPane();
+        buyersAndSellersTable = new javax.swing.JTable();
+        buyersAndSellersTable.getTableHeader().setReorderingAllowed(false);
         updateTab = new javax.swing.JSplitPane();
         allTxMenuPanel = new javax.swing.JPanel();
         updateButton = new javax.swing.JButton();
@@ -4006,17 +4114,17 @@ public class MarketPanel extends javax.swing.JPanel
 
         tabbedPane.addTab("Charts", chartsTab);
 
-        tradesTab.setDividerLocation(200);
-        tradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-        tradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
+        ltcTradesTab.setDividerLocation(200);
+        ltcTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        ltcTradesTab.addComponentListener(new java.awt.event.ComponentAdapter()
         {
             public void componentHidden(java.awt.event.ComponentEvent evt)
             {
-                tradesTabComponentHidden(evt);
+                ltcTradesTabComponentHidden(evt);
             }
             public void componentShown(java.awt.event.ComponentEvent evt)
             {
-                tradesTabComponentShown(evt);
+                ltcTradesTabComponentShown(evt);
             }
         });
 
@@ -4053,7 +4161,7 @@ public class MarketPanel extends javax.swing.JPanel
         ltcTradesTable.setFillsViewportHeight(true);
         ltcTradesScrollpane.setViewportView(ltcTradesTable);
 
-        tradesTab.setRightComponent(ltcTradesScrollpane);
+        ltcTradesTab.setRightComponent(ltcTradesScrollpane);
 
         javax.swing.GroupLayout ltcChartPlaceholderLayout = new javax.swing.GroupLayout(ltcChartPlaceholder);
         ltcChartPlaceholder.setLayout(ltcChartPlaceholderLayout);
@@ -4066,9 +4174,9 @@ public class MarketPanel extends javax.swing.JPanel
             .addGap(0, 100, Short.MAX_VALUE)
         );
 
-        tradesTab.setLeftComponent(ltcChartPlaceholder);
+        ltcTradesTab.setLeftComponent(ltcChartPlaceholder);
 
-        tabbedPane.addTab("LTC trades", tradesTab);
+        tabbedPane.addTab("LTC trades", ltcTradesTab);
 
         btcTradesTab.setDividerLocation(200);
         btcTradesTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
@@ -4326,6 +4434,52 @@ public class MarketPanel extends javax.swing.JPanel
 
         tabbedPane.addTab("Digibyte trades", digibyteTradesTab);
 
+        buyersAndSellersTab.setDividerLocation(300);
+        buyersAndSellersTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
+        singleTraderScrollPane.setViewportView(singleTraderTable);
+
+        buyersAndSellersTab.setBottomComponent(singleTraderScrollPane);
+
+        buyersAndSellersTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][]
+            {
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
+            },
+            new String []
+            {
+                "Address", "Name", "Total QORT bought", "Total QORT sold", "Genesis amount (QORT)"
+            }
+        )
+        {
+            Class[] types = new Class []
+            {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean []
+            {
+                false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex)
+            {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex)
+            {
+                return canEdit [columnIndex];
+            }
+        });
+        buyersAndSellersPane.setViewportView(buyersAndSellersTable);
+
+        buyersAndSellersTab.setTopComponent(buyersAndSellersPane);
+
+        tabbedPane.addTab("Buyers & Sellers", buyersAndSellersTab);
+
         updateTab.setDividerLocation(300);
         updateTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
@@ -4540,22 +4694,22 @@ public class MarketPanel extends javax.swing.JPanel
         ((ChartWindow)btcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
     }//GEN-LAST:event_btcTradesTabComponentHidden
 
-    private void tradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_tradesTabComponentShown
-    {//GEN-HEADEREND:event_tradesTabComponentShown
+    private void ltcTradesTabComponentShown(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ltcTradesTabComponentShown
+    {//GEN-HEADEREND:event_ltcTradesTabComponentShown
         //Selecting the ltc trades chart window during init didn't work (selected frame is more estethic)
-        try{((ChartWindow) tradesTab.getTopComponent()).setSelected(true);}
+        try{((ChartWindow) ltcTradesTab.getTopComponent()).setSelected(true);}
         catch (PropertyVetoException e){}
         //ensures saveCurrentArrangement doesn't get called when the ltc trades chartwindow is resized
         chartWindowFocused = false;
-    }//GEN-LAST:event_tradesTabComponentShown
+    }//GEN-LAST:event_ltcTradesTabComponentShown
 
-    private void tradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_tradesTabComponentHidden
-    {//GEN-HEADEREND:event_tradesTabComponentHidden
-        if(tradesTab.getTopComponent() instanceof ChartWindow == false)
+    private void ltcTradesTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_ltcTradesTabComponentHidden
+    {//GEN-HEADEREND:event_ltcTradesTabComponentHidden
+        if(ltcTradesTab.getTopComponent() instanceof ChartWindow == false)
             return;
 
-        ((ChartWindow)tradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
-    }//GEN-LAST:event_tradesTabComponentHidden
+        ((ChartWindow)ltcTradesTab.getTopComponent()).chartMaker.chartDialog.setVisible(false);
+    }//GEN-LAST:event_ltcTradesTabComponentHidden
 
     private void chartsTabComponentHidden(java.awt.event.ComponentEvent evt)//GEN-FIRST:event_chartsTabComponentHidden
     {//GEN-HEADEREND:event_chartsTabComponentHidden
@@ -5236,6 +5390,9 @@ public class MarketPanel extends javax.swing.JPanel
     private javax.swing.JScrollPane btcTradesScrollpane;
     private javax.swing.JSplitPane btcTradesTab;
     protected javax.swing.JTable btcTradesTable;
+    private javax.swing.JScrollPane buyersAndSellersPane;
+    private javax.swing.JSplitPane buyersAndSellersTab;
+    private javax.swing.JTable buyersAndSellersTable;
     protected javax.swing.JLabel chartColorLabel;
     private javax.swing.JLabel chartsLabel;
     protected javax.swing.JPanel chartsList;
@@ -5304,6 +5461,7 @@ public class MarketPanel extends javax.swing.JPanel
     protected javax.swing.JLabel lookupStatusLabel;
     private javax.swing.JPanel ltcChartPlaceholder;
     private javax.swing.JScrollPane ltcTradesScrollpane;
+    private javax.swing.JSplitPane ltcTradesTab;
     protected javax.swing.JTable ltcTradesTable;
     protected javax.swing.JCheckBox movingAverageBox;
     protected javax.swing.JLabel plotColorLabel;
@@ -5321,6 +5479,8 @@ public class MarketPanel extends javax.swing.JPanel
     protected javax.swing.JCheckBox showTextBox;
     protected javax.swing.JCheckBox showXcrosshairsBox;
     protected javax.swing.JCheckBox showYcrosshairBox;
+    private javax.swing.JScrollPane singleTraderScrollPane;
+    private javax.swing.JTable singleTraderTable;
     protected javax.swing.JCheckBox snapshotsCheckbox;
     protected javax.swing.JButton stopButton;
     private javax.swing.JLabel strokeLabel;
@@ -5341,7 +5501,6 @@ public class MarketPanel extends javax.swing.JPanel
     private javax.swing.JScrollPane tradeInfoScrollpane;
     private javax.swing.JTable tradeInfoTable;
     protected javax.swing.JCheckBox tradeVolumeBox;
-    private javax.swing.JSplitPane tradesTab;
     protected javax.swing.JTable txTable;
     private javax.swing.JLabel uiLabel1;
     protected javax.swing.JButton updateButton;

@@ -83,7 +83,7 @@ public class DatabaseManager
             BackgroundService.AppendLog(e);
         }
         return 0;
-    }
+    }    
     
     public boolean TableExists(String table, Connection c)
     {
@@ -529,6 +529,28 @@ public class DatabaseManager
         return null;
     }     
     
+    public Object tryGetItemValue(String table,String item,String key, String keyValue,Connection c)
+    {        
+         try 
+        {   
+            Object value;
+            String sqlString = String.format("select %s from %s where %s=%s", item, table, key, keyValue);
+            Statement stmt = c.createStatement();
+            ResultSet resultSet = stmt.executeQuery(sqlString);
+            resultSet.first();
+            value = resultSet.getObject(1);            
+            
+            return value;
+        } 
+        catch (SQLException e) 
+        {
+            //since this is try, we expect exceptions to be thrown. The purpose of this extra function is to 
+            //try and get a value without clogging up the log
+        }
+        
+        return null;
+    }   
+    
      public void FillJTable(String table,String whereKey, JTable jTable, Connection c)
     {
         try 
@@ -567,6 +589,22 @@ public class DatabaseManager
         {
 //            String header = GetColumnHeaders(table, c).get(0); //will be "ID" or "Timestamp"  
             String query = String.format("select * from %s order by %s %s limit %d", table, whereKey, order,limit); //,header);
+            Statement stmt = c.createStatement();
+            ResultSet resultSet = stmt.executeQuery(query);
+            jTable.setModel(Utilities.BuildTableModel(table, resultSet));
+        }
+        catch (SQLException e)
+        {
+            BackgroundService.AppendLog(e);
+        }
+    } 
+    
+    public void FillJTableByCondition(String table, String condition,JTable jTable, Connection c)
+    {
+        try
+        {
+//            String header = GetColumnHeaders(table, c).get(0); //will be "ID" or "Timestamp"  
+            String query = String.format("select * from %s %s", table, condition); //,header);
             Statement stmt = c.createStatement();
             ResultSet resultSet = stmt.executeQuery(query);
             jTable.setModel(Utilities.BuildTableModel(table, resultSet));

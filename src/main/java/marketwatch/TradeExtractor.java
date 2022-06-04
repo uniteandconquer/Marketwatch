@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TradeExtractor
@@ -80,7 +81,26 @@ public class TradeExtractor
                 
                 String ltcStatus = "Updating Litecoin trades. Please wait...";
                 marketPanel.lookupStatusLabel.setText(ltcStatus);
-                ltcResults = extractTrades("LITECOIN",marketPanel,connection);
+                ltcResults = extractTrades("LITECOIN",marketPanel,connection);      
+                
+                //if failed the label was changed during lookup
+                boolean usdFailed = !marketPanel.lookupStatusLabel.getText().equals(ltcStatus);
+                
+                marketPanel.lookupStatusLabel.setText("Updating buyers and sellers table. Please wait...");
+                updateTraders(marketPanel.dbManager,marketPanel,connection);                
+                
+                int totalTraders = marketPanel.dbManager.getRowCount("traders", connection);
+                
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery("select count(*) from traders where total_qort_sold < 0.0001");
+                resultSet.first();
+                int totalSellers = totalTraders - resultSet.getInt(1);                
+                
+                statement = connection.createStatement();
+                resultSet = statement.executeQuery("select count(*) from traders where total_qort_bought < 0.0001");
+                resultSet.first();
+                int totalBuyers = totalTraders - resultSet.getInt(1);
+                
                 
                 String statusString = Utilities.AllignCenterHTML(
                         String.format("Update finished<br/><br/>"
@@ -88,15 +108,17 @@ public class TradeExtractor
                                 + "New Ravencoin trades : %d | Total Ravencoin trades : %d<br/>"
                                 + "New Digibyte trades : %d | Total Digibyte trades : %d<br/>"
                                 + "New Bitcoin trades : %d | Total Bitcoin trades : %d<br/>"
-                                + "New Litecoin trades : %d | Total Litecoin trades : %d", 
+                                + "New Litecoin trades : %d | Total Litecoin trades : %d<br/><br/>"
+                                + "Total sellers : %d  |  Total buyers %d",
                                 dogeResults[0],dogeResults[1],
                                 ravenResults[0],ravenResults[1],
                                 digibyteResults[0],digibyteResults[1],
                                 btcResults[0],btcResults[1],
-                                ltcResults[0],ltcResults[1]));
+                                ltcResults[0],ltcResults[1],
+                                totalSellers,totalBuyers));
                 
                 //If usd lookup failed, append the status string with the usd failed message
-                if(!marketPanel.lookupStatusLabel.getText().equals(ltcStatus))
+                if(usdFailed)
                     statusString += Utilities.AllignCenterHTML("<br/>" + marketPanel.lookupStatusLabel.getText());
                 
                 marketPanel.fillTradesTables();
@@ -664,6 +686,193 @@ public class TradeExtractor
                          marketPanel.progressBar.setString(String.format("%.2f%% done  |  %s " + foreignBlockchain + " trades found", percent, Utilities.numberFormat(current)));                         
                     });                      
                 }   
-        }        
+        }
+     
+     private static void updateTraders(DatabaseManager dbManager, MarketPanel marketPanel, Connection connection) 
+             throws ConnectException, TimeoutException, IOException,SQLException
+    {
+            dbManager.ExecuteUpdate("drop table buyers_sellers", connection);
+            
+            dbManager.CreateTable(new String[]{"buyers_sellers",
+                "timestamp_deployed", "long",
+                "timestamp_sold", "long",
+                "buyer", "varchar(100)",
+                "seller","varchar(100)",
+                "qort_amount", "double",
+                "foreign_amount", "double",
+                "qort_price", "double",
+                "foreign_price", "double",
+                "foreign_chain", "varchar(20)"
+            }, connection);
+            
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select timestamp,at_json from all_trades order by timestamp asc");
+            
+            while(resultSet.next())
+            {
+                String jsonString = resultSet.getString("at_json");
+                JSONObject jso = new JSONObject(jsonString);
+                
+                long timestampSold = resultSet.getLong("timestamp");
+                
+                long timestampDeployed = jso.getLong("creationTimestamp");
+                String foreignChain = jso.getString("foreignBlockchain");
+                String buyer = jso.getString("qortalPartnerReceivingAddress");
+                String seller = jso.getString("qortalCreator");
+                double qortAmount = jso.getDouble("qortAmount");
+                double foreignAmount = jso.getDouble("expectedForeignAmount");
+                double foreignPrice = Utilities.divide(foreignAmount, qortAmount);
+                double qortPrice = Utilities.divide(1, foreignPrice);
+                
+                dbManager.InsertIntoDB(new String[]{"buyers_sellers",
+                "timestamp_deployed",String.valueOf(timestampDeployed),
+                "timestamp_sold",String.valueOf(timestampSold),
+                    "buyer", Utilities.SingleQuotedString(buyer),
+                    "seller", Utilities.SingleQuotedString(seller),
+                    "qort_amount", String.valueOf(qortAmount),
+                    "foreign_amount", String.valueOf(foreignAmount),
+                    "qort_price", String.valueOf(qortPrice),
+                    "foreign_price", String.valueOf(foreignPrice),
+                    "foreign_chain", Utilities.SingleQuotedString(foreignChain)
+                }, connection);   
+                
+            }
+            
+            //Calculating the totals every time is not very time consuming, looking up names IS.
+            //We can keep the traders entries (with name) and remove the totals, this simplifies
+            //the totaling calculation and saves the trouble of pruning the trades by signature/timestamp
+            if(dbManager.TableExists("traders", connection))
+            {
+                dbManager.ExecuteUpdate("update traders set total_qort_bought = 0", connection);
+                dbManager.ExecuteUpdate("update traders set total_qort_sold = 0", connection);                
+            }
+            else            
+                dbManager.CreateTable(new String[]{"traders",
+                    "address","varchar(100)",
+                    "name","varchar(max)",
+                    "total_qort_bought","double",
+                    "total_qort_sold","double",
+                    "genesis_amount","double"}, connection);
+            
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("select buyer,seller,qort_amount from buyers_sellers");
+            
+            while(resultSet.next())
+            {
+                String buyer = resultSet.getString("buyer");
+                String seller = resultSet.getString("seller");
+                
+                //If seller address entry doesn't exist make one
+                if(dbManager.tryGetItemValue("traders", "total_qort_sold", "address", Utilities.SingleQuotedString(seller), connection) == null)
+                    dbManager.InsertIntoDB(new String[]{"traders", "address", Utilities.SingleQuotedString(seller), "total_qort_sold","0",
+                        "total_qort_bought","0"}, connection);
+                
+                //If buyer address entry doesn't exist make one
+                if(dbManager.tryGetItemValue("traders", "total_qort_bought", "address", Utilities.SingleQuotedString(buyer), connection) == null)
+                    dbManager.InsertIntoDB(new String[]{"traders", "address", Utilities.SingleQuotedString(buyer), "total_qort_sold","0",
+                        "total_qort_bought","0"}, connection);
+                
+                double oldSellerTotal = (double)dbManager.GetItemValue("traders", "total_qort_sold", "address", Utilities.SingleQuotedString(seller), connection);
+                double oldBuyerTotal =(double) dbManager.GetItemValue("traders", "total_qort_bought", "address", Utilities.SingleQuotedString(buyer), connection);
+                                
+                double sellerTotal = Utilities.add((double) oldSellerTotal, resultSet.getDouble("qort_amount"));
+                dbManager.ChangeValue("traders", "total_qort_sold", 
+                        String.valueOf(sellerTotal), "address", Utilities.SingleQuotedString(seller), connection);
+               
+                double buyerTotal = Utilities.add((double) oldBuyerTotal, resultSet.getDouble("qort_amount"));
+                dbManager.ChangeValue("traders", "total_qort_bought", 
+                        String.valueOf(buyerTotal), "address", Utilities.SingleQuotedString(buyer), connection);
+            
+            }   
+            
+            int tradersCount = dbManager.getRowCount("traders", connection);            
+            
+            System.err.println("traders count = " + tradersCount);
+            
+            String jsonString;
+            JSONObject jSONObject;
+            JSONArray jsonArray;
+            
+            int count = 0;
+            
+            for(Object trader : dbManager.GetColumn("traders", "address", "", "", connection))
+            {
+                if(dbManager.tryGetItemValue("traders", "name", "address", Utilities.SingleQuotedString(trader.toString()), connection) == null)
+                {
+                    try
+                    {   
+                        jsonString = Utilities.ReadStringFromURL("http://" + dbManager.socket + "/names/address/" + trader.toString());
+                        
+                        jsonArray = new JSONArray(jsonString);
+                        
+                        if (jsonArray.length() > 0)
+                        {
+                            jSONObject = jsonArray.getJSONObject(0);
+                            String name = jSONObject.getString("name"); 
+                            if(name.contains("'"))
+                                name = name.replace("'", "''");
+                            dbManager.ChangeValue("traders", "name", Utilities.SingleQuotedString(name), 
+                                    "address", Utilities.SingleQuotedString(trader.toString()), connection);
+                        }
+                    }
+                    catch(ConnectException | TimeoutException e)
+                    {
+                        BackgroundService.AppendLog("Qortal API unavailable, cannot lookup traders names");
+                        break;
+                    }
+                    catch (IOException | JSONException e)
+                    {
+                        BackgroundService.AppendLog(e);
+                    }
+                } 
+                
+                if(dbManager.tryGetItemValue("traders", "genesis_amount", "address", Utilities.SingleQuotedString(trader.toString()), connection) == null)
+                {
+                    try
+                    {    
+                         jsonString = Utilities.ReadStringFromURL("http://" + dbManager.socket + "/transactions/search?txType=GENESIS&"
+                                 + "address=" + trader.toString() + "&confirmationStatus=CONFIRMED&");       
+                         
+                        jsonArray = new JSONArray(jsonString);                            
+
+                        if(jsonArray.length() > 0)
+                        {  
+                            jSONObject = jsonArray.getJSONObject(0);
+                            double qortAmount = Utilities.divide(jSONObject.getDouble("amount"), 250d);
+                            dbManager.ChangeValue("traders", "genesis_amount", String.valueOf(qortAmount), 
+                                    "address", Utilities.SingleQuotedString(trader.toString()), connection);
+                        } 
+                        else
+                            //If trader has no GENESIS TX, no need to check again on nex update
+                            dbManager.ChangeValue("traders", "genesis_amount", "0", 
+                                    "address", Utilities.SingleQuotedString(trader.toString()), connection);
+                            
+                    }
+                    catch(ConnectException | TimeoutException e)
+                    {
+                        BackgroundService.AppendLog("Qortal API unavailable, cannot lookup genesis tx");
+                        break;
+                    }
+                    catch (IOException | JSONException e)
+                    {
+                        BackgroundService.AppendLog(e);
+                    }
+                }
+                
+                final int current = count;
+
+                 SwingUtilities.invokeLater(() ->
+                 {
+                     double percent = ((double) current / tradersCount) * 100; 
+                      marketPanel.progressBar.setValue((int) percent);
+                      marketPanel.progressBar.setString(String.format("Updating traders info  |  %.2f%% done  |  %s traders checked", percent, Utilities.numberFormat(current)));                         
+                 });  
+
+                 count++;
+                    
+            }
+                        
+            marketPanel.fillTradersTable("total_qort_sold", "desc");            
+    }
     
 }
