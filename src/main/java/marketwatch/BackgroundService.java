@@ -167,7 +167,7 @@ public class BackgroundService
     public static void AppendLog(Exception e)
     {
         //Comment out when done de-bugging
-        e.printStackTrace();
+//        e.printStackTrace();
         
         
         //comment 'setUseParentHandlers(false);'  in constructor
