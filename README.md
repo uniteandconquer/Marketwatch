@@ -8,6 +8,12 @@ Watch the quick tour video at https://rumble.com/vzfsiq-marketwatch-quick-tour.h
 
 -----------------
 
+*IMPORTANT NOTE FOR MAC AND LINUX USERS
+
+The styles were created using a Windows Operating System. This means that the fonts used in each style are probably not available on your system. This will cause the app to apply a standard font which could result in rendering artifacts in the texts displayed by the app. To fix this, simply choose a font that is to your liking in the style menu and it will automatically be applied and remembered in your settings. It will not be saved to your style file, you can optionally change the font for any style and click the save button to overwrite the existing style.
+
+--------
+
 Marketwatch is a highly customizable, yet easy to use utility that extracts every trade straight from your local Qortal node and plots that data into charts. It also calculates cross-chain and USD prices from that data since the day the trade portal went live and until the present time.
 
 Features include:
